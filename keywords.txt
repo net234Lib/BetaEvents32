@@ -1,0 +1,68 @@
+#######################################
+# Syntax Coloring Map for BetaEvents
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+BetaEvents	KEYWORD1
+EventManager	KEYWORD1
+evHandlerSerial	KEYWORD1
+evHandlerLed	KEYWORD1
+evHandlerButton	KEYWORD1
+evHandlerDebug	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+get	KEYWORD2
+handle	KEYWORD2
+addEventHandler	KEYWORD2
+removeDelayEvent	KEYWORD2
+push	KEYWORD2
+delayedPush	KEYWORD2
+second	KEYWORD2
+minute	KEYWORD2
+hour	KEYWORD2
+helperFreeRam	KEYWORD2
+timestamp	KEYWORD2
+
+setOn	KEYWORD2
+pulse	KEYWORD2
+setMillisec	KEYWORD2
+setFrequence	KEYWORD2
+isDown	KEYWORD2
+inputChar	KEYWORD2
+inputString	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+Events	KEYWORD2
+inputChar	KEYWORD2
+inputString	KEYWORD2
+Keyboard	KEYWORD2
+BP0	KEYWORD2
+Led0 KEYWORD2
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+evNill	LITERAL1
+ev100Hz	LITERAL1
+ev10Hz	LITERAL1
+ev1Hz	LITERAL1
+ev24H	LITERAL1 
+evInit	LITERAL1 
+evxLedOff	LITERAL1
+evxLedOn	LITERAL1
+evInChar	LITERAL1
+evInString	LITERAL1
+evxBPDown	LITERAL1
+evxBPUp	LITERAL1
+evxBPLongDown	LITERAL1
+evxBPLongUp	LITERAL1
+
