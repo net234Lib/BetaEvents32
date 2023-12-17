@@ -163,7 +163,7 @@ private:
 
 /**********************************************************
 
-   gestion d'un traceur de debugage touche 'T' pour visualiser la charge CPU
+   gestion d'un traceur de debug touche 'T' pour visualiser la charge CPU
 
  ***********************************************************/
 

@@ -182,6 +182,7 @@ evHandlerSerial::evHandlerSerial(const uint32_t aSerialSpeed, const uint8_t inpu
 
 void evHandlerSerial::begin() {
   Serial.begin(serialSpeed);
+  //delay(100);
 }
 
 byte evHandlerSerial::get() {

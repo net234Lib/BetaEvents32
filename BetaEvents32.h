@@ -59,9 +59,7 @@ EventManager Events = EventManager();
 
 // definition GPIO sur D5 pour BP0 si celuici n'est pas defini
 #ifndef BP0_PIN
-#if  defined(__AVR__)
-#define BP0_PIN 5
-#elif defined(ESP8266) || defined(ESP32)
+#if  defined(ESP8266) || defined(ESP32)
 #define BP0_PIN D3 // (flash) 
 #endif
 #endif

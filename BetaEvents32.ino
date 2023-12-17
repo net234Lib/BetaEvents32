@@ -46,13 +46,13 @@
 
     V2.3    09/03/2022   isolation of evHandler for compatibility with dual core ESP32
     V2.4    30/09/2022   Isolation des IO (evhandlerOutput)
+
+    BetaEvent32  1.0  12/12/2023  Full rebuild for ESP32
     *************************************************/
 
-#define APP_NAME "betaEvents V3.0"
+#define APP_NAME "betaEvents32 V1.0"
 
-#if  defined(__AVR__)
-#include <avr/wdt.h>
-#elif defined(ESP8266)
+#if  defined(ESP8266)
 #include <ESP8266WiFi.h>
 #elif defined(ESP32)
 #include <WiFi.h>
@@ -91,16 +91,10 @@ enum tUserEventCode {
   doReset,
 };
 
-//#if  defined(__AVR__)
-#define BP0_PIN 5
-#define BP1_PIN 6
-#define LED1_PIN 4
-//#elif defined(ESP8266) || defined(ESP32)
-//#define BP0_PIN D5 // D1
-//#define BP1_PIN D6 // D2
-//#define LED1_PIN D0 // GPIO16
+#define BP0_PIN D5
+#define BP1_PIN D6
+#define LED1_PIN D7
 
-//#endif
 
 // instances poussoir
 evHandlerButton BP0(evBP0, BP0_PIN);
@@ -108,7 +102,7 @@ evHandlerButton BP1(evBP1, BP1_PIN);
 evHandlerDebug  Debug;
 
 // instance LED
-evHandlerLed    Led0(evLed0, LED_BUILTIN, HIGH);
+evHandlerLed    Led0(evLed0, LED_BUILTIN, LOW);
 evHandlerLed    Led1(evLed1, LED1_PIN, HIGH);
 
 // instance Serial
