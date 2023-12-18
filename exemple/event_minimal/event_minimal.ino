@@ -55,7 +55,7 @@ enum tUserEventCode {
 EventManager Events = EventManager();
 
 // instance clavier
-evHandlerSerial Keyboard(115200,100);
+evHandlerSerial Keyboard(115200);
 
 // instances poussoir
 evHandlerButton BP0(evBP0,BP0_PIN);

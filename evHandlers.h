@@ -144,17 +144,17 @@ private:
 
 class evHandlerSerial : public eventHandler_t {
 public:
-  evHandlerSerial(const uint32_t aSerialSpeed = 115200, const uint8_t inputStringSize = 20);
+  evHandlerSerial(const uint32_t aSerialSpeed, const uint8_t inputStringSize = 20);
   virtual void begin() override;
   //virtual void handle()  override;
   virtual byte get() override;
   String inputString = "";
   char inputChar = '\0';
 private:
-  uint8_t inputStringSizeMax;
+  uint8_t inputStringSizeMax = 20;
   bool stringComplete = false;
   bool stringErase = false;
-  uint32_t serialSpeed;
+  uint32_t serialSpeed = 115200;
 };
 
 
