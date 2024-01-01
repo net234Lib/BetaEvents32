@@ -96,7 +96,7 @@ struct stdEvent_t  {
   //  stdEvent_t(const uint8_t code = evNill, const char aChar) : code(code), aChar(aChar) {};
 
   stdEvent_t(const stdEvent_t& stdevent) : code(stdevent.code), data(stdevent.data) {}
-
+  uint8_t code;       // code of the event
   union   {
     uint8_t ext;        // extCode of the event
     char    charExt;
@@ -104,7 +104,7 @@ struct stdEvent_t  {
      String* StringPtr;
     size_t  data;
   };
-  uint8_t code;       // code of the event
+
 };
 
 

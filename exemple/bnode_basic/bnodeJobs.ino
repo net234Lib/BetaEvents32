@@ -32,8 +32,25 @@
 
  *************************************************/
 
-#define HISTO_FNAME  F("/histo.json")
+#define HISTO_FNAME F("/histo.json")
 #define CONFIG_FNAME F("/config.json")
+
+
+void writeHisto(const String& aAction, const String& aInfo) {
+  //MyLittleFS.remove(HISTO_FNAME);  // raz le fichier temp
+  JSONVar jsonData;
+  jsonData["timestamp"] = (double)currentTime;
+  jsonData["action"] = aAction;
+  jsonData["info"] = aInfo;
+  String jsonHisto = JSON.stringify(jsonData);
+  DV_println(jsonHisto);
+  File aFile = MyLittleFS.open(HISTO_FNAME, "a+");
+  if (!aFile) return;
+  aFile.println(jsonHisto);
+  aFile.close();
+}
+
+
 
 /*
 String niceDisplayTime(const time_t time, bool full) {
@@ -202,19 +219,7 @@ bool jobShowConfig() {
 }
 
 
-void writeHisto(const String aAction, const String aInfo) {
-  //MyLittleFS.remove(HISTO_FNAME);  // raz le fichier temp
-  JSONVar jsonData;
-  jsonData["timestamp"] = (double)currentTime;
-  jsonData["action"] = aAction;
-  jsonData["info"] = aInfo;
-  String jsonHisto = JSON.stringify(jsonData);
-  D_println(jsonHisto);
-  File aFile = MyLittleFS.open(HISTO_FNAME, "a+");
-  if (!aFile) return;
-  aFile.println(jsonHisto);
-  aFile.close();
-}
+
 
 void printHisto() {
   File aFile = MyLittleFS.open(HISTO_FNAME, "r");
@@ -474,18 +479,17 @@ void jobRefreshLeds(const uint8_t delta) {
 */
 // helper to save and restore RTC_DATA
 // this is ugly but we need this to get correct sizeof()
-#define  RTC_DATA(x) (uint32_t*)&x,sizeof(x)
+#define RTC_DATA(x) (uint32_t*)&x, sizeof(x)
 
 bool saveRTCmemory() {
   setCrc8(&savedRTCmemory.crc8 + 1, sizeof(savedRTCmemory) - 1, savedRTCmemory.crc8);
-  //system_rtc_mem_read(64, &savedRTCmemory, sizeof(savedRTCmemory));
-  return ESP.rtcUserMemoryWrite(0, RTC_DATA(savedRTCmemory) );
+  return ESP.rtcUserMemoryWrite(0, RTC_DATA(savedRTCmemory));
 }
 
 bool getRTCMemory() {
   ESP.rtcUserMemoryRead(0, RTC_DATA(savedRTCmemory));
   //Serial.print("CRC1="); Serial.println(getCrc8( (uint8_t*)&savedRTCmemory,sizeof(savedRTCmemory) ));
-  return ( setCrc8( &savedRTCmemory.crc8 + 1, sizeof(savedRTCmemory) - 1, savedRTCmemory.crc8 ) );
+  return (setCrc8(&savedRTCmemory.crc8 + 1, sizeof(savedRTCmemory) - 1, savedRTCmemory.crc8));
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -494,12 +498,12 @@ bool getRTCMemory() {
 
 
 //__attribute__((always_inline))
-inline uint8_t _crc8_ccitt_update  (uint8_t crc, const uint8_t inData)   {
-  uint8_t   i;
+inline uint8_t _crc8_ccitt_update(uint8_t crc, const uint8_t inData) {
+  uint8_t i;
   crc ^= inData;
 
-  for ( i = 0; i < 8; i++ ) {
-    if (( crc & 0x80 ) != 0 ) {
+  for (i = 0; i < 8; i++) {
+    if ((crc & 0x80) != 0) {
       crc <<= 1;
       crc ^= 0x07;
     } else {
@@ -509,7 +513,7 @@ inline uint8_t _crc8_ccitt_update  (uint8_t crc, const uint8_t inData)   {
   return crc;
 }
 
-bool  setCrc8(const void* data, const uint16_t size, uint8_t &refCrc ) {
+bool setCrc8(const void* data, const uint16_t size, uint8_t& refCrc) {
   uint8_t* dataPtr = (uint8_t*)data;
   uint8_t crc = 0xFF;
   for (uint8_t i = 0; i < size; i++) crc = _crc8_ccitt_update(crc, *(dataPtr++));
@@ -529,7 +533,7 @@ String jobGetConfigStr(const String aKey) {
   //D_println(jsonConfig);
   aFile.close();
   configOk = JSON.typeof(jsonConfig[aKey]) == F("string");
-  if ( configOk ) result = (const char*)jsonConfig[aKey];
+  if (configOk) result = (const char*)jsonConfig[aKey];
   return (result);
 }
 
@@ -542,7 +546,7 @@ int jobGetConfigInt(const String aKey) {
   aFile.close();
   //D_println(JSON.typeof(jsonConfig[aKey]));
   configOk = JSON.typeof(jsonConfig[aKey]) == F("number");
-  if (configOk ) result = jsonConfig[aKey];
+  if (configOk) result = jsonConfig[aKey];
   return (result);
 }
 
@@ -566,7 +570,7 @@ bool jobSetConfigStr(const String aKey, const String aValue) {
   }
   aFile = MyLittleFS.open(CONFIG_FNAME, "w");
   if (!aFile) return (false);
-  D_println(JSON.stringify(jsonConfig));
+  //DV_println(JSON.stringify(jsonConfig));
   aFile.println(JSON.stringify(jsonConfig));
   aFile.close();
   return (true);
@@ -584,7 +588,7 @@ bool jobSetConfigInt(const String aKey, const int aValue) {
   jsonConfig[aKey] = aValue;
   aFile = MyLittleFS.open(CONFIG_FNAME, "w");
   if (!aFile) return (false);
-  D_println(JSON.stringify(jsonConfig));
+  //DV_println(JSON.stringify(jsonConfig));
   aFile.println(JSON.stringify(jsonConfig));
   aFile.close();
   return (true);
@@ -602,4 +606,48 @@ bool jobShowConfig() {
   }
   Serial.println(F("--- CONFIG END---"));
   return (aFile);
+}
+
+
+
+// check wifi status
+void jobCheckWifi() {
+  static uint8_t oldWiFiStatus = 99;
+  uint8_t WiFiStatus = WiFi.status();
+  if (oldWiFiStatus != WiFiStatus) {
+    oldWiFiStatus = WiFiStatus;
+    DV_println(WiFiStatus);
+    //    WL_IDLE_STATUS      = 0,
+    //    WL_NO_SSID_AVAIL    = 1,
+    //    WL_SCAN_COMPLETED   = 2,
+    //    WL_CONNECTED        = 3,
+    //    WL_CONNECT_FAILED   = 4,
+    //    WL_CONNECTION_LOST  = 5,
+    //    WL_DISCONNECTED     = 6
+    //    7: WL_AP_LISTENING
+    //    8: WL_AP_CONNECTED
+
+    // Check changement Connecté // non connecté
+    WiFiConnected = (WiFiStatus == WL_CONNECTED);
+    static bool wasConnected = false;
+    if (wasConnected == WiFiConnected) return;
+
+    wasConnected = WiFiConnected;
+    Led0.setMillisec(WiFiConnected ? 5000 : 500, 5);
+    if (WiFiConnected) {
+      setSyncProvider(getWebTime);
+      setSyncInterval(6 * 3600);
+      // lisen UDP 23423
+      //        Serial.println("Listen broadcast");
+      //        myUdp.begin();
+      //        Events.delayedPush(checkWWW_DELAY, evCheckWWW);  // will send mail
+      //        Events.delayedPush(checkAPI_DELAY, evCheckAPI);
+    } else {
+      WWWOk = false;
+    }
+    DV_println(WiFiConnected);
+    writeHisto(WiFiConnected ? F("wifi Connected") : F("wifi lost"), WiFi.SSID());
+  }
+
+
 }

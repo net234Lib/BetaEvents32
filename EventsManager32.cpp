@@ -428,11 +428,13 @@ bool   EventManager::removeDelayEvent(const byte codeevent) {
 //====== Sram dispo =========
 size_t EventManager::freeRam () {
 #ifndef __AVR__
+
   return ESP.getFreeHeap();
 #else
+
   extern int __heap_start, *__brkval;
   int v;
-  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);*
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 #endif
 }
 

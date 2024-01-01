@@ -49,7 +49,7 @@
  ***********************************************************/
 
 evHandlerOutput::evHandlerOutput(const uint8_t aEventCode, const uint8_t aPinNumber, const bool aStateON)
-  : pinNumber(aPinNumber), stateON(aStateON), evCode(aEventCode){};
+  : pinNumber(aPinNumber), stateON(aStateON), evCode(aEventCode) {};
 
 void evHandlerOutput::begin() {
   pinMode(pinNumber, OUTPUT);
@@ -81,10 +81,12 @@ void evHandlerOutput::setOn(const bool status) {
 }
 
 void evHandlerOutput::pulse(const uint32_t aDelay) {  // pulse d'allumage simple
-  if (aDelay > 0) {
-    evManager.delayedPush(aDelay, evCode, evxOn);
+  if (aDelay == 0) {
+    evManager.delayedPush(0, evCode, evxOff);
+    return;
   }
-  evManager.delayedPush(aDelay, evCode, evxOff);
+  evManager.delayedPush(0, evCode, evxOn);
+  evManager.delayedPush(aDelay, evCode, evxOff, false);
 }
 
 
@@ -145,7 +147,7 @@ void evHandlerLed::setFrequence(const uint8_t frequence, const uint8_t percent) 
 
 
 evHandlerButton::evHandlerButton(const uint8_t aEventCode, const uint8_t aPinNumber, const uint16_t aLongDelay)
-  : pinNumber(aPinNumber), evCode(aEventCode), longDelay(aLongDelay){};
+  : evCode(aEventCode), pinNumber(aPinNumber),  longDelay(aLongDelay) {};
 
 void evHandlerButton::begin() {
   pinMode(pinNumber, INPUT_PULLUP);
@@ -182,7 +184,6 @@ evHandlerSerial::evHandlerSerial(const uint32_t aSerialSpeed, const uint8_t inpu
 
 void evHandlerSerial::begin() {
   Serial.begin(serialSpeed);
-  //delay(100);
 }
 
 byte evHandlerSerial::get() {
@@ -209,6 +210,18 @@ byte evHandlerSerial::get() {
   }
   return (evNill);
 }
+
+
+/**********************
+ * 
+ * forcage d'une inputstring
+ */
+
+void  evHandlerSerial::setInputString(const String aStr) {
+  inputString = aStr;
+  stringComplete = (inputString.length() > 0);
+}
+
 
 
 /**********************************************************

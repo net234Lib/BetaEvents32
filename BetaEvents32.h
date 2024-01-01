@@ -1,7 +1,7 @@
 /*************************************************
      Header betaEvents.h   helper yo use a Event system with EventManager
     Copyright 2020 Pierre HENRY net23@frdev.com All - right reserved.
-
+ 
   This file is part of betaEvents.
 
     betaEvents is free software: you can redistribute it and/or modify
@@ -44,7 +44,7 @@
     V2.2  27/10/2021
        more arduino like lib with self built in instance
 
-    V2.3    09/03/2022   isolation of evHandler for compatibility with dual core ESP32
+    V2.2.1    12/10/2023   isolation of evHandler for compatibility with dual core ESP32
 
  *************************************************/
 #pragma once
@@ -54,12 +54,35 @@
 // Events Manager build an instance called "Events" who care about events
 EventManager Events = EventManager();
 
+
+
+//if SERIAL is needed it should be declare first othewise others evHandler cant print during begin
+#ifndef NO_SERIAL
+// instance Serial
+#ifndef SERIAL_SPEED
+#define SERIAL_SPEED 115200
+#endif
+
+#define SERIAL_BUFFERSIZE 100
+
+evHandlerSerial Keyboard(SERIAL_SPEED,SERIAL_BUFFERSIZE);
+
+#ifndef NO_DEBUG
+
+// instance debugger
+evHandlerDebug  Debug;
+#endif
+#endif
+
+
 // instance poussoir si evBP0 existe
 #ifdef DEFAULT_PIN 
 
 // definition GPIO sur D5 pour BP0 si celuici n'est pas defini
 #ifndef BP0_PIN
-#if  defined(ESP8266) || defined(ESP32)
+#if  defined(__AVR__)
+#define BP0_PIN 5
+#elif defined(ESP8266) || defined(ESP32)
 #define BP0_PIN D3 // (flash) 
 #endif
 #endif
@@ -69,8 +92,6 @@ EventManager Events = EventManager();
 evHandlerButton BP0(evBP0, BP0_PIN);
 
 #endif
-
-
 
 // instance LED si evLed0 existe
 #ifdef DEFAULT_PIN 
@@ -92,23 +113,4 @@ evHandlerButton BP0(evBP0, BP0_PIN);
 // led clignotante a 1Hz 
 evHandlerLed    Led0(evLed0, LED0_PIN, Led0Revert , 1);
 
-#endif
-
-
-
-#ifndef NO_SERIAL
-// instance Serial
-#ifndef SERIAL_SPEED
-#define SERIAL_SPEED 115200
-#endif
-
-#define SERIAL_BUFFERSIZE 100
-
-evHandlerSerial Keyboard(SERIAL_SPEED,SERIAL_BUFFERSIZE);
-
-#ifndef NO_DEBUG
-
-// instance debugger
-evHandlerDebug  Debug;
-#endif
 #endif

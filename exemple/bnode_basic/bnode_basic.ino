@@ -29,14 +29,25 @@
 
 
 #include "EventsManager32.h"
-#include "ESP8266.h"
+
 
 // littleFS
 #include <LittleFS.h>  //Include File System Headers
 #define MyLittleFS LittleFS
 
 //WiFI
+#ifdef ESP8266
+#include "ESP8266.h"
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#elif defined(ESP32)
+#include "ESP32.h"
+#include <WiFi.h>
+#include <HTTPClient.h>
+#else
+#error "ESP8266 ou ESP32 uniquement"
+#endif
+
 //#include <ESP8266HTTPClient.h>
 #include <Arduino_JSON.h>
 //WiFiClientSecure client;
@@ -71,24 +82,24 @@ enum tUserEventCode {
 EventManager Events = EventManager();
 
 // instance clavier
-evHandlerSerial Keyboard(115200,100);
+evHandlerSerial Keyboard(115200, 100);
 
 #ifdef DEBUG_ON
 // instance debugger
-evHandlerDebug  Debug();
+evHandlerDebug Debug();
 #endif
 
 
 // instances poussoir
-evHandlerButton BP0(evBP0,BP0_PIN);
+evHandlerButton BP0(evBP0, BP0_PIN);
 
 // Variable d'application locale
 String nodeName = "";  // nom de  la device (a configurer avec NODE=)"
 
 bool WiFiConnected = false;
-time_t currentTime;             // timestamp en secondes (local time)
-int8_t timeZone = 0;            //-2;  //les heures sont toutes en localtimes (par defaut hivers france)
-int deltaTime = 0;              // delta timestamp UTC en heure
+time_t currentTime;   // timestamp en secondes (local time)
+int8_t timeZone = 0;  //-2;  //les heures sont toutes en localtimes (par defaut hivers france)
+int deltaTime = 0;    // delta timestamp UTC en heure
 bool configErr = false;
 bool WWWOk = false;
 bool APIOk = false;
@@ -97,22 +108,22 @@ bool sleepOk = true;
 int multi = 0;         // nombre de clic rapide
 bool configOk = true;  // global used by getConfig...
 const byte postInitDelay = 15;
-bool postInit = false;          // true postInitDelay secondes apres le boot (limitation des messages Slack)
+bool postInit = false;  // true postInitDelay secondes apres le boot (limitation des messages Slack)
 
 
 
 // instance LED
-evHandlerLed    Led0(evLed0, LED_BUILTIN,false);
+evHandlerLed Led0(evLed0, LED_BUILTIN, false);
 
 void setup() {
   enableWiFiAtBootTime();  // mendatory for autoconnect WiFi with ESP8266 kernel 3.0
- 
+
   // Start instance
   Events.begin();
   Serial.println(F("\r\n\n" APP_NAME));
   Led0.setFrequence(1, 10);
 
-  D_println(WiFi.getMode());
+  DV_println(WiFi.getMode());
 
   //  normaly not needed
   if (WiFi.getMode() != WIFI_STA) {
@@ -147,7 +158,7 @@ void setup() {
     nodeName += WiFi.macAddress().substring(12, 14);
     nodeName += WiFi.macAddress().substring(15, 17);
   }
-  D_println(nodeName);
+  DV_println(nodeName);
 
   // recuperation de la timezone dans la config
   timeZone = jobGetConfigInt(F("timezone"));
@@ -155,7 +166,7 @@ void setup() {
     timeZone = -2;  // par defaut France hivers
     Serial.println(F("!!! timezone !!!"));
   }
-  D_println(timeZone);
+  DV_println(timeZone);
 
 
 
@@ -167,8 +178,42 @@ void loop() {
   // test
   Events.get();
   Events.handle();
-  switch (Events.code)
-  {
+  switch (Events.code) {
+
+    case ev1Hz:
+
+      // check for connection to local WiFi  1 fois par seconde c'est suffisant
+      jobCheckWifi();
+
+      // save current time in RTC memory
+      currentTime = now();
+      savedRTCmemory.actualTimestamp = currentTime;  // save time in RTC memory
+      saveRTCmemory();
+
+      // If we are not connected we warn the user every 30 seconds that we need to update credential
+      if (!WiFiConnected && second() % 30 == 15) {
+        // every 30 sec
+        Serial.print(F("module non connecté au Wifi local "));
+        DTV_println("SSID", WiFi.SSID());
+        Serial.println(F("taper WIFI= pour configurer le Wifi"));
+      }
+
+    
+      /*
+      // au chagement de mois a partir 7H25 on envois le mail (un essais par heure)
+      if (WiFiConnected && currentMonth != month() && hour() > 7 && minute() == 25 && second() == 0) {
+        if (sendHistoTo(mailSendTo)) {
+          if (currentMonth > 0) eraseHisto();
+          currentMonth = month();
+          writeHisto(F("Mail send ok"), mailSendTo);
+        } else {
+          writeHisto(F("Mail erreur"), mailSendTo);
+        }
+      }
+      */
+
+      break;
+
 
     case evBP0:
       switch (Events.ext) {
@@ -186,9 +231,7 @@ void loop() {
         case evxLongOff:
           Serial.println(F("BP0 Long Off"));
           break;
-
       }
       break;
-
   }
 }

@@ -65,21 +65,25 @@ typedef enum {
 
 class evHandlerOutput : public eventHandler_t {
 
-public:
-  evHandlerOutput(const uint8_t aEventCode, const uint8_t aPinNumber, const bool stateON = HIGH);
-  virtual void begin() override;
-  virtual void handle() override;
-  bool isOn();
-  void setOn(const bool status = true);
-  void pulse(const uint32_t millisecondes);  // pulse d'allumage simple
+  public:
+    evHandlerOutput(const uint8_t aEventCode, const uint8_t aPinNumber, const bool stateON = HIGH);
+    virtual void begin() override;
+    virtual void handle() override;
+    bool isOn();
+    void setOn(const bool status = true);
+    void pulse(const uint32_t millisecondes);  // pulse d'allumage simple
 
-protected:
-  uint8_t evCode;
-private:
-  uint8_t pinNumber;
+ 
 
-  bool state = false;
-  bool stateON = HIGH;
+  private:
+    uint8_t pinNumber;
+    bool stateON; // = HIGH;
+    bool state; // = false;
+    
+ protected:
+    uint8_t evCode;
+
+
 };
 
 /**********************************************************
@@ -94,17 +98,17 @@ private:
 
 
 class evHandlerLed : public evHandlerOutput {
-public:
-  evHandlerLed(const uint8_t aEventCode, const uint8_t aPinNumber, const bool stateON = HIGH, const uint8_t frequence = 0);
-  //virtual void begin()  override;
-  virtual void handle() override;
-  void setOn(const bool status = true);
-  void setFrequence(const uint8_t frequence, const uint8_t percent = 10);      // frequence de la led
-  void setMillisec(const uint16_t millisecondes, const uint8_t percent = 10);  // frequence de la led
+  public:
+    evHandlerLed(const uint8_t aEventCode, const uint8_t aPinNumber, const bool stateON = HIGH, const uint8_t frequence = 0);
+    //virtual void begin()  override;
+    virtual void handle() override;
+    void setOn(const bool status = true);
+    void setFrequence(const uint8_t frequence, const uint8_t percent = 10);      // frequence de la led
+    void setMillisec(const uint16_t millisecondes, const uint8_t percent = 10);  // frequence de la led
 
-private:
-  uint16_t millisecondes;
-  uint8_t percent;
+  private:
+    uint16_t millisecondes;
+    uint8_t percent;
 };
 
 
@@ -118,21 +122,21 @@ private:
 
 
 class evHandlerButton : public eventHandler_t {
-public:
-  evHandlerButton(const uint8_t aEventCode, const uint8_t aPinNumber, const uint16_t aLongDelay = 1500);
-  virtual void begin() override;
-  virtual void handle() override;
-  bool isOn() {
-    return state;
-  };
+  public:
+    evHandlerButton(const uint8_t aEventCode, const uint8_t aPinNumber, const uint16_t aLongDelay = 1500);
+    virtual void begin() override;
+    virtual void handle() override;
+    bool isOn() {
+      return state;
+    };
 
-protected:
-  uint8_t evCode;
+  protected:
+    uint8_t evCode;
 
-private:
-  uint8_t pinNumber;
-  bool state = HIGH;
-  uint16_t longDelay;
+  private:
+    uint8_t pinNumber;
+    uint16_t longDelay;
+    bool state = HIGH;
 };
 
 #ifndef __AVR_ATtiny85__
@@ -143,18 +147,21 @@ private:
  ***********************************************************/
 
 class evHandlerSerial : public eventHandler_t {
-public:
-  evHandlerSerial(const uint32_t aSerialSpeed, const uint8_t inputStringSize = 20);
-  virtual void begin() override;
-  //virtual void handle()  override;
-  virtual byte get() override;
-  String inputString = "";
-  char inputChar = '\0';
-private:
-  uint8_t inputStringSizeMax = 20;
-  bool stringComplete = false;
-  bool stringErase = false;
-  uint32_t serialSpeed = 115200;
+  public:
+    evHandlerSerial(const uint32_t aSerialSpeed = 115200, const uint8_t inputStringSize = 20);
+    virtual void begin() override;
+    //virtual void handle()  override;
+    virtual byte get() override;
+    void  setInputString(const String aStr);
+    String inputString = "";
+    char inputChar = '\0';
+  private:
+    
+    uint32_t serialSpeed;
+    uint8_t inputStringSizeMax;
+    bool stringComplete = false;
+    bool stringErase = false;
+    
 };
 
 
@@ -163,20 +170,20 @@ private:
 
 /**********************************************************
 
-   gestion d'un traceur de debug touche 'T' pour visualiser la charge CPU
+   gestion d'un traceur de debugage touche 'T' pour visualiser la charge CPU
 
  ***********************************************************/
 
 
 
 class evHandlerDebug : public eventHandler_t {
-public:
-  //evHandlerDebug();
-  virtual void handle() override;
-  uint8_t trackTime = 0;
-private:
-  uint16_t ev100HzMissed = 0;
-  uint16_t ev10HzMissed = 0;
+  public:
+    //evHandlerDebug();
+    virtual void handle() override;
+    uint8_t trackTime = 0;
+  private:
+    uint16_t ev100HzMissed = 0;
+    uint16_t ev10HzMissed = 0;
 };
 
 #endif

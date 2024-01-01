@@ -1,6 +1,6 @@
 // definition de IO pour beta four
 
-#define __BOARD__ESP8266__
+//#define __BOARD__ESP8266__
 
 #define LED_ON LOW
 
