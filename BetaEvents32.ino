@@ -181,7 +181,7 @@ void loop() {
           BP0Multi++;
           Serial.println(F("BP0 Down"));
           if (BP0Multi > 1) {
-            D_println(BP0Multi);
+            DV_println(BP0Multi);
           }
           break;
         case evxOff:
@@ -263,7 +263,7 @@ void loop() {
       if (Keyboard.inputString.equals(F("S"))) {
         sleepOk = !sleepOk;
         Serial.print(F("Sleep=")); Serial.println(sleepOk);
-        D_println(*Events.StringPtr);
+        DV_println(*Events.StringPtr);
       }
 
       if (Keyboard.inputString.equals(F("O"))) {

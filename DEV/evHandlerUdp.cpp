@@ -26,15 +26,11 @@
     - gestion de message UDP pour communiquer en node avec des events
 
      *************************************************/
-#if defined(ESP8266) || defined(ESP32)
 
 #include  "evHandlerUdp.h"
-//#include <WiFiUdp.h>
 
-//WiFiUDP UDP;
-
-const uint16_t delaySilenceUdp = 300;  // delay de silence avant d'envoyer les trames
-const uint16_t delayInterUdp = 100;     // delay entre 2 trames
+const uint16_t delaySilenceUdp = 100;  // delay de silence avant d'envoyer les trames
+const uint16_t delayInterUdp = 20;     // delay entre 2 trames
 const uint8_t  numberOfTrame = 4;      // nombre de trame repetitives
 
 
@@ -42,12 +38,12 @@ evHandlerUdp::evHandlerUdp(const uint8_t aEventCode, const uint16_t aPortNumber,
   evCode(aEventCode),
   localPortNumber(aPortNumber),
   nodename(aNodename) {
-  //rxHeader.reserve(16);
-  //rxNode.reserve(16);
+  rxHeader.reserve(16);
+  rxNode.reserve(16);
   rxJson.reserve(UDP_MAX_SIZE);
   messageUDP.reserve(UDP_MAX_SIZE);
-  //  01:10:47.989 -> 01:10:47,CPU=18%,Loop=884,Nill=778,Ram=46456,Frag=15%,MaxMem=38984 Miss:16/0
-  //  01:25:14.369 -> 01:25:13,CPU=22%,Loop=849,Nill=745,Ram=46464,Frag=2%,MaxMem=45608 Miss:12/0
+//  01:10:47.989 -> 01:10:47,CPU=18%,Loop=884,Nill=778,Ram=46456,Frag=15%,MaxMem=38984 Miss:16/0
+//  01:25:14.369 -> 01:25:13,CPU=22%,Loop=849,Nill=745,Ram=46464,Frag=2%,MaxMem=45608 Miss:12/0
 
 }
 
@@ -69,8 +65,7 @@ void evHandlerUdp::handle() {
           if (millis() - lastUDP > delaySilenceUdp) {
             cast(txIPDest);
             --castCnt;
-          }
-          DV_println(castCnt);
+          } // else D_println(unicastCnt);
           if (castCnt > 0) evManager.delayedPush(delayInterUdp, evCode, evxBcast);
         }
         break;
@@ -83,106 +78,86 @@ void evHandlerUdp::handle() {
   int packetSize = UDP.parsePacket();
   if (packetSize == 0) return;
 
-  T_println("Received packet UDP");
-  //  Serial.printf("Received packet of size % d from % s: % d\n    (to % s: % d, free heap = % d B)\n",
-  //                packetSize,
-  //                UDP.remoteIP().toString().c_str(), UDP.remotePort(),
-  //                UDP.destinationIP().toString().c_str(), UDP.localPort(),
-  //                ESP.getFreeHeap());
+  Serial.print("Received packet UDP");
+//  Serial.printf("Received packet of size % d from % s: % d\n    (to % s: % d, free heap = % d B)\n",
+//                packetSize,
+//                UDP.remoteIP().toString().c_str(), UDP.remotePort(),
+//                UDP.destinationIP().toString().c_str(), UDP.localPort(),
+//                ESP.getFreeHeap());
 
   char udpPacketBuffer[UDP_MAX_SIZE + 1]; //buffer to hold incoming packet,
   int size = UDP.read(udpPacketBuffer, UDP_MAX_SIZE);
 
-  //  // read the packet into packetBufffer
-  //  if (packetSize > UDP_MAX_SIZE) {
-  //    Serial.printf("UDP too big ");
-  //    return;
-  //  }
+//  // read the packet into packetBufffer
+//  if (packetSize > UDP_MAX_SIZE) {
+//    Serial.printf("UDP too big ");
+//    return;
+//  }
 
   //TODO: clean this   cleanup line feed
   if (size > 0 && udpPacketBuffer[size - 1] == '\n') size--;
   udpPacketBuffer[size] = 0;
 
   String aStr = udpPacketBuffer;
-
+ 
   lastUDP = millis();
 
   // filtrage des trame repetitive
-  
-  String bStr = grabFromStringUntil(aStr, ','); // should be {"TRAME":xxx,
-  String cStr = grabFromStringUntil(bStr, ':'); // should be {"TRAME"
 
-  if ( not ( cStr.equals(F("{\"TRAME\"")) and aStr.endsWith("}}}") ))  {  //
-    DTV_print("Bad paquet",cStr);
-    DV_println(aStr);
-    return;
-  }
-  byte trNum = bStr.toInt();
+   String bStr = grabFromStringUntil(aStr, '\t'); // EVENT xxxx
+   rxHeader = grabFromStringUntil(bStr, ' '); // header
+   rxNode = grabFromStringUntil(aStr, '\t'); // node
 
-  // UdpId is a mix of remote IP and EVENT number
-  rxIPSender = UDP.remoteIP();
-  IPAddress  aUdpId = rxIPSender;
-  aUdpId[0] = trNum;
+     // UdpId is a mix of remote IP and EVENT number
+    rxIPSender = UDP.remoteIP();
+    IPAddress  aUdpId = rxIPSender;
+    aUdpId[0] = bStr.toInt();
 
-  //C'est un doublon USP
-  if (aUdpId == lastUdpId) {
-    T_println("Doublon UDP");
-    return;
-  }
-  //Todo : filtrer les 5 dernier UdpID ?
-  lastUdpId = aUdpId;
- 
-  // c'est une nouvelle trame
+    if (aUdpId == lastUdpId) {
+      Serial.println(F("Doublon UDP"));
+      return;
+    }
+    //Todo : filtrer les 5 dernier UdpID ?
+    lastUdpId = aUdpId;
 
 
-  bcast = ( UDP.destinationIP() == broadcastIP );
+    bcast = ( UDP.destinationIP() == broadcastIP );
+    rxJson = aStr;
+//    D_print(rxHeader);
+//    D_print(rxNode);
+//    D_println(aStr);
 
-  // Analyse de la suite : normalement "nodename":{ json struct }"
-
-  
-
-  rxJson = '{';
-  rxJson += aStr;
-     // D_print(rxHeader);
-     // D_print(rxNode);
-      DV_println(rxJson);
-
-  evManager.push(evCode, evxUdpRxMessage);
+    evManager.push(evCode,evxUdpRxMessage);
 
 }
 
 
 void evHandlerUdp::broadcast(const String & aJsonStr) {
-  T_println("Send broadcast ");
-  unicast(broadcastIP, aJsonStr);
-}
+  Serial.print(F("Send broadcast "));
+  unicast(broadcastIP,aJsonStr);
+} 
 
-void evHandlerUdp::unicast(const IPAddress aIPAddress, const String& aJsonStr) {
-  DTV_println("Send unicast ", aJsonStr);
+void evHandlerUdp::unicast(const IPAddress aIPAddress,const String& aJsonStr) {
+  Serial.print(F("Send unicast "));
+  DV_println(aJsonStr);
   messageUDP = aJsonStr;
   castCnt = numberOfTrame;
   if (++numTrameUDP == 0) numTrameUDP++;
   txIPDest = aIPAddress;
-  evManager.delayedPush(0, evCode, evxBcast); // clear pending bcast
+  evManager.delayedPush(0,evCode, evxBcast);  // clear pending bcast
 }
 
-// {"WiFiLuce":"{\"temperature_radiateur\":21.25}","DOMO02":"{\"ext\":21.25}"}
+
 void evHandlerUdp::cast(const IPAddress aAddress) {
-  T_println("Send cast ");
-  String message = F("{\"TRAME\":");
+  Serial.println("Send cast ");
+  String message = F("EVENT ");
   message += numTrameUDP;
-  message += ",\"";
+  message += '\t';
   message += nodename;
-  message += "\":";
+  message += '\t';
   message += messageUDP;
-  message += '}';
-  if ( !UDP.beginPacket(aAddress, localPortNumber) ) {
-    DT_println("Error sending UDP");
-    return ;
-  }
-  DTV_println("UDP send", message);
+  message += '\n';
+  if ( !UDP.beginPacket(aAddress, localPortNumber) ) return ;
   UDP.write(message.c_str(), message.length());
   UDP.endPacket();
 }
-
-#endif

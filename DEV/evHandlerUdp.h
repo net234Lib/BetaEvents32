@@ -24,18 +24,12 @@
 
     V1.0  07/09/2022
     - gestion de message UDP pour communiquer en node avec des events
-    V1.1  23/10/2023
-    - passage des message udp en 100% Json (suggestion Artur)
-    - TODO : ajouter une pile pour permetre d'envoyer plusieurs messages
 
      *************************************************/
 #pragma once
 #include <Arduino.h>
-#define DEBUG_ON
 #include  "EventsManager32.h"
 #include <WiFiUdp.h>
-//#include <IPAddress.h>
-
 
 typedef enum   {
   // evenement recu
@@ -46,7 +40,7 @@ typedef enum   {
   //evxNoPending,            // clear pending UDP
 } tUdpEventExt;
 
-const int UDP_MAX_SIZE = 250;  // we handle short messages
+const int UDP_MAX_SIZE = 200;  // we handle short messages
 
 
 class evHandlerUdp : public eventHandler_t {
@@ -62,7 +56,7 @@ class evHandlerUdp : public eventHandler_t {
     uint8_t evCode;
     uint16_t localPortNumber;
     WiFiUDP UDP;
-    String & nodename;  // pointeur sur l'identifiant du nodename
+    String & nodename;  // pointeur sur l'identifiant de trma nodename
     String messageUDP;  // message UDP en cours d'emission
     IPAddress txIPDest; // ip de la destination de la trame
     //bool  pendingUDP = false;   // udp less than 500ms
@@ -73,7 +67,7 @@ class evHandlerUdp : public eventHandler_t {
   public:
     IPAddress rxIPSender; // ip de la source de la trame
     bool bcast;   // true if rx is a bcast
-    //String rxHeader;  // header of rxMessage
-    //String rxNode;    // nodename of rxMessage
+    String rxHeader;  // header of rxMessage
+    String rxNode;    // nodename of rxMessage
     String rxJson;    // json of rxMessage
 };

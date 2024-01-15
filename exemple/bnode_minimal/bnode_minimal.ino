@@ -28,7 +28,7 @@
 
 #define APP_NAME "bnode_minimal V1.0"
 
-
+#include <ArduinoOTA.h>
 #include "EventsManager32.h"
 
 
@@ -77,6 +77,10 @@ enum tUserEventCode {
   evBP0 = 100,
   evLed0,
   evUdp,
+  evStartOta,
+  evStopOta,
+  evReset,
+
 };
 
 
@@ -111,7 +115,7 @@ evHandlerUdp myUdp(evUdp, localUdpPort, nodeName);
 
 
 bool WiFiConnected = false;
-time_t currentTime;   // timestamp en secondes : now() (local time)  
+time_t currentTime;   // timestamp en secondes : now() (local time)
 int8_t timeZone = 0;  //-2;  //les heures sont toutes en localtimes (par defaut hivers france)
 //int deltaTime = 0;    // delta timestamp UTC en heure
 bool configErr = false;
@@ -180,6 +184,9 @@ void setup() {
   }
   DV_println(timeZone);
 
+  // lisen UDP 23423
+  Serial.println("Listen broadcast");
+  myUdp.begin();
 
 
 
@@ -188,10 +195,18 @@ void setup() {
 
 void loop() {
   // test
+  ArduinoOTA.handle();
   Events.get();
   Events.handle();
   switch (Events.code) {
+    case evInit:
+      {
+        Serial.println("Init");
 
+        Events.delayedPush(5000, evStartOta);
+        myUdp.broadcast("{\"info\":\"Boot\"}");
+      }
+      break;
     case ev1Hz:
 
       // check for connection to local WiFi  1 fois par seconde c'est suffisant
@@ -210,10 +225,10 @@ void loop() {
         Serial.println(F("taper WIFI= pour configurer le Wifi"));
       }
 
-    
+
       /*
-      // au chagement de mois a partir 7H25 on envois le mail (un essais par heure)
-      if (WiFiConnected && currentMonth != month() && hour() > 7 && minute() == 25 && second() == 0) {
+        // au chagement de mois a partir 7H25 on envois le mail (un essais par heure)
+        if (WiFiConnected && currentMonth != month() && hour() > 7 && minute() == 25 && second() == 0) {
         if (sendHistoTo(mailSendTo)) {
           if (currentMonth > 0) eraseHisto();
           currentMonth = month();
@@ -221,7 +236,7 @@ void loop() {
         } else {
           writeHisto(F("Mail erreur"), mailSendTo);
         }
-      }
+        }
       */
 
       break;
@@ -245,5 +260,135 @@ void loop() {
           break;
       }
       break;
+
+    case evUdp:
+      if (Events.ext == evxUdpRxMessage) {
+        DTV_println("got an Event UDP", myUdp.rxJson);
+        String aStr = grabFromStringUntil(myUdp.rxJson, F("{\"CMD\":{\""));
+        if (myUdp.rxJson.length() == 0) {
+          DTV_println("Not a CMD", aStr);
+          break;
+        }
+
+        aStr = grabFromStringUntil(myUdp.rxJson, '"');
+        if (not aStr.equals(nodeName)) {
+          DTV_println("CMD not for me", aStr);
+          break;
+        }
+        grabFromStringUntil(myUdp.rxJson, '"');
+        aStr = grabFromStringUntil(myUdp.rxJson, '"');
+        aStr.trim();
+        if (aStr.length()) Keyboard.setInputString(aStr);
+      }
+      break;
+
+    //    case doReset:
+    //      Events.reset();
+    //      break;
+    case evStopOta:
+      Serial.println("Stop OTA");
+      myUdp.broadcast("{\"info\":\"stop OTA\"}");
+      ArduinoOTA.end();
+      writeHisto(F("Stop OTA"), nodeName);
+      break;
+
+    case evStartOta: {
+        // start OTA
+        String deviceName = nodeName;  // "ESP_";
+
+        ArduinoOTA.setHostname(deviceName.c_str());
+        ArduinoOTA.begin();
+        Events.delayedPush(1000L * 15 * 60, evStopOta);  // stop OTA dans 15 Min
+
+        //MDNS.update();
+        Serial.print("OTA on '");
+        Serial.print(deviceName);
+        Serial.println("' started.");
+        Serial.print("SSID:");
+        Serial.println(WiFi.SSID());
+        myUdp.broadcast("{\"info\":\"start OTA\"}");
+        //end start OTA
+
+      }
+    case evInString:
+      //D_println(Keyboard.inputString);
+      if (Keyboard.inputString.startsWith(F("?"))) {
+        Serial.println(F("Liste des commandes"));
+        Serial.println(F("NODE=nodename (nom du module)"));
+        Serial.println(F("WIFI=ssid,paswword"));
+        //        Serial.println(F("MAILTO=adresse@mail    (mail du destinataire)"));
+        //        Serial.println(F("MAILFROM=adresse@mail  (mail emetteur 'NODE' sera remplacé par nodename)"));
+        //        Serial.println(F("SMTPSERV=mail.mon.fai,login,password  (SMTP serveur et credential) "));
+        //        Serial.println(F("SONDENAMES=name1,name2...."));
+        //        Serial.println(F("SWITCHENAMES=name1,name2...."));
+        //        Serial.println(F("RAZCONF      (efface la config sauf le WiFi)"));
+        //        Serial.println(F("MAIL         (envois un mail de test)"));
+        //        Serial.println(F("API          (envois une commande API timezone)"));
+        //        Serial.println(F("BCAST        (envoi un broadcast)"));
+      }
+
+      if (Keyboard.inputString.startsWith(F("NODE="))) {
+        Serial.println(F("SETUP NODENAME : 'NODE= nodename'  ( this will reset)"));
+        String aStr = Keyboard.inputString;
+        grabFromStringUntil(aStr, '=');
+        aStr.replace(" ", "_");
+        aStr.trim();
+
+        if (aStr != "") {
+          nodeName = aStr;
+          DV_println(nodeName);
+          jobSetConfigStr(F("nodename"), nodeName);
+          delay(1000);
+          Events.reset();
+        }
+      }
+
+
+      if (Keyboard.inputString.startsWith(F("WIFI="))) {
+        Serial.println(F("SETUP WIFI : 'WIFI= WifiName, password"));
+        String aStr = Keyboard.inputString;
+        grabFromStringUntil(aStr, '=');
+        String ssid = grabFromStringUntil(aStr, ',');
+        ssid.trim();
+        DV_println(ssid);
+        if (ssid != "") {
+          String pass = aStr;
+          pass.trim();
+          DV_println(pass);
+          bool result = WiFi.begin(ssid, pass);
+          //WiFi.setAutoConnect(true);
+          DV_println(WiFi.getAutoConnect());
+          Serial.print(F("WiFi begin "));
+          DV_println(result);
+        }
+      }
+      //      if (Keyboard.inputString.equals(F("RAZCONF"))) {
+      //        Serial.println(F("RAZCONF this will reset"));
+      //        eraseConfig();
+      //        delay(1000);
+      //        Events.reset();
+      //      }
+
+      //      if (Keyboard.inputString.equals(F("RESET"))) {
+      //        Serial.println(F("RESET"));
+      //        Events.push(doReset);
+      //      }
+      if (Keyboard.inputString.equals(F("FREE"))) {
+        DV_println(Events.freeRam());
+        String aStr = F("{\"info\":\"FREE=");
+        aStr += String(Events.freeRam());
+        aStr += "\"}";
+        myUdp.broadcast(aStr);
+      }
+
+
+      if (Keyboard.inputString.equals("OTA")) {
+        Events.push(evStartOta);
+        T_println("Start OTA");
+      }
+
+
+      break;
+
   }
 }
