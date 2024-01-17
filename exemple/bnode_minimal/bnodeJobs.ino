@@ -1,6 +1,6 @@
 /*************************************************
  *************************************************
-    jobs for bnode_basic.ino   check and report by may a box and the wifi connectivity
+    jobs for bnode_minimal.ino   check and report by may a box and the wifi connectivity
     Copyright 2021 Pierre HENRY net23@frdev.com All - right reserved.
 
   This file is part of betaEvents.
@@ -633,7 +633,7 @@ void jobCheckWifi() {
     if (wasConnected == WiFiConnected) return;
 
     wasConnected = WiFiConnected;
-    Led0.setMillisec(WiFiConnected ? 5000 : 500, 5);
+    jobUpdateLed0();
     if (WiFiConnected) {
       //setSyncProvider(getWebTime);
       //setSyncInterval(6 * 3600);
@@ -642,11 +642,25 @@ void jobCheckWifi() {
       //        myUdp.begin();
       //        Events.delayedPush(checkWWW_DELAY, evCheckWWW);  // will send mail
       //        Events.delayedPush(checkAPI_DELAY, evCheckAPI);
-  
     }
     DV_println(WiFiConnected);
     writeHisto(WiFiConnected ? F("wifi Connected") : F("wifi lost"), WiFi.SSID());
   }
+}
 
 
+// ajustement du clignotement de la led0
+// si le poussoir BP0 est enfoncé  clignotement tout les 500ms ()
+// si le wifi est OK clignotement toute les 5 secondes
+// sinon clignotemnt toute les secondes (wifi off)
+void jobUpdateLed0() {
+  if (BP0.isOn()) {
+    Led0.setMillisec(500, 10);
+    return;
+  }
+  if (WiFiConnected) {
+    Led0.setMillisec(5000, 2);
+    return;
+  }
+  Led0.setMillisec(1000, 10);
 }

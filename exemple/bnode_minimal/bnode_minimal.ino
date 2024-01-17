@@ -137,7 +137,7 @@ void setup() {
   // Start instance
   Events.begin();
   Serial.println(F("\r\n\n" APP_NAME));
-  Led0.setFrequence(1, 10);
+  jobUpdateLed0();
 
   DV_println(WiFi.getMode());
 
@@ -147,6 +147,7 @@ void setup() {
     WiFi.mode(WIFI_STA);
     WiFi.setAutoConnect(true);
     WiFi.begin();
+
     //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   }
 
@@ -162,8 +163,9 @@ void setup() {
   }
   // little trick to leave timeStatus to timeNotSet
   // TODO: see with https://github.com/PaulStoffregen/Time to find a way to say timeNeedsSync
-  adjustTime(savedRTCmemory.actualTimestamp);
+
   currentTime = savedRTCmemory.actualTimestamp;
+  adjustTime(currentTime);
 
   // recuperation de la config dans config.json
   nodeName = jobGetConfigStr(F("nodename"));
@@ -188,7 +190,7 @@ void setup() {
   Serial.println("Listen broadcast");
   myUdp.begin();
 
-
+  jobUpdateLed0();
 
   Serial.println("Bonjour ....");
 }
@@ -245,11 +247,11 @@ void loop() {
     case evBP0:
       switch (Events.ext) {
         case evxOn:
-          Led0.setMillisec(500, 50);
+          jobUpdateLed0();
           Serial.println(F("BP0 On"));
           break;
         case evxOff:
-          Led0.setMillisec(1000, 10);
+          jobUpdateLed0();
           Serial.println(F("BP0 Off"));
           break;
         case evxLongOn:
@@ -292,7 +294,8 @@ void loop() {
       writeHisto(F("Stop OTA"), nodeName);
       break;
 
-    case evStartOta: {
+    case evStartOta:
+      {
         // start OTA
         String deviceName = nodeName;  // "ESP_";
 
@@ -308,7 +311,6 @@ void loop() {
         Serial.println(WiFi.SSID());
         myUdp.broadcast("{\"info\":\"start OTA\"}");
         //end start OTA
-
       }
     case evInString:
       //D_println(Keyboard.inputString);
@@ -384,11 +386,10 @@ void loop() {
 
       if (Keyboard.inputString.equals("OTA")) {
         Events.push(evStartOta);
-        T_println("Start OTA");
+        DT_println("Start OTA");
       }
 
 
       break;
-
   }
 }
