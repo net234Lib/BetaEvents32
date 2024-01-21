@@ -47,7 +47,7 @@
 #define APP_NAME "betaEvents V2.0.1"
 
 #if  defined(__AVR__)
-#include <avr/wdt.h>
+zz#include <avr/wdt.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
 #elif defined(ESP32)
@@ -124,18 +124,19 @@ void setup() {
   WiFi.mode(WIFI_OFF);
   btStop();
 #endif
-  Serial.begin(115200);
-  Serial.println(F("\r\n\n" APP_NAME));
+  //Serial.begin(115200);
+ 
   // Start instance
   Events.begin();
+   Serial.println(F("\r\n\n" APP_NAME));
   Led0.setFrequence(1, 10);
   Led1.setMillisec(2000, 10);
   Serial.println("Bonjour ....");
-  D_println(sizeof(stdEvent_t));
-  D_println(sizeof(size_t));
-  D_println(sizeof(eventItem_t));
-  D_println(sizeof(delayEventItem_t));
-  D_println(sizeof(longDelayEventItem_t));
+  DV_println(sizeof(stdEvent_t));
+  DV_println(sizeof(size_t));
+  DV_println(sizeof(eventItem_t));
+  DV_println(sizeof(delayEventItem_t));
+  DV_println(sizeof(longDelayEventItem_t));
 }
 
 byte BP0Multi = 0;
@@ -210,16 +211,22 @@ void loop() {
 
 
     case ev1S:
-      Serial.print(F("Ram=")); Serial.println(helperFreeRam());
       Serial.println(F("EV1S"));
+      TV.println("Ram=",Serial.println(helperFreeRam());
+      V_println(Events.intExt);
+      V_println(Events.intExt2);
       break;
     case ev2S:
       Serial.print(F("Ram=")); Serial.println(helperFreeRam());
       Serial.println(F("EV2S"));
+      V_println(Events.intExt);
+      V_println(Events.intExt2);
       break;
     case ev3S:
       Serial.print(F("Ram=")); Serial.println(helperFreeRam());
       Serial.println(F("EV3S"));
+      V_println(Events.intExt);
+      V_println(Events.intExt2);
       break;
 
     case doReset:

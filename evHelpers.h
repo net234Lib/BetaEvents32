@@ -52,8 +52,8 @@
 String niceDisplayDelay(time_t aDelay);
 String Digit2_str(const uint16_t value);
 void   helperReset();
-int    helperFreeRam();
-
+//int    helperFreeRam();
+#define  helperFreeRam() ESP.getFreeHeap()
 // extrait un element terminé par aKey de la chaine aString
 // si aKey est absent toute la chaine est extaite
 String grabFromStringUntil(String & aString, const char aKey);

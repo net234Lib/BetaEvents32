@@ -50,24 +50,25 @@
     
     *************************************************/
 
-#define APP_NAME "betaEvents V3.0.B1"
+#define APP_NAME "betaEvents V3.0.B2"
 
-#if  defined(__AVR__)
-#include <avr/wdt.h>
-#elif defined(ESP8266)
+#if defined(ESP8266)
 #include <ESP8266WiFi.h>
-#elif defined(ESP32)
-#include <WiFi.h>
+//#elif defined(ESP32)
+//#include <WiFi.h>
+#else
+#error "ESP8266  uniquement"
 #endif
 
 
 
-#define DEFAULT_PIN 
-
+#define DEFAULT_PIN
+#define DEBUG_ON
 #include "EventsManager32.h"
-// Preinstantiate Objects /// as Nicolas Zambetti with Wire.cpp /////
-
 EventManager Events = EventManager();
+// instance Serial
+evHandlerSerial Keyboard;
+evHandlerDebug Debug;
 
 /* Evenements du Manager (voir betaEvents.h)
   evNill = 0,      // No event  about 1 every milisecond but do not use them for delay Use delayedPushEvent(delay,event)
@@ -93,55 +94,51 @@ enum tUserEventCode {
   doReset,
 };
 
-//#if  defined(__AVR__)
-#define BP0_PIN 5
-#define BP1_PIN 6
-#define LED1_PIN 4
-//#elif defined(ESP8266) || defined(ESP32)
-//#define BP0_PIN D5 // D1
-//#define BP1_PIN D6 // D2
-//#define LED1_PIN D0 // GPIO16
 
-//#endif
+#define BP0_PIN 0  //D3
+#define BP1_PIN 14
+#define LED1_PIN 16
+
 
 // instances poussoir
 evHandlerButton BP0(evBP0, BP0_PIN);
-evHandlerButton BP1(evBP1, BP1_PIN);
-evHandlerDebug  Debug;
+//evHandlerButton BP1(evBP1, BP1_PIN);
+
 
 // instance LED
-evHandlerLed    Led0(evLed0, LED_BUILTIN, HIGH);
-evHandlerLed    Led1(evLed1, LED1_PIN, HIGH);
+evHandlerLed Led0(evLed0, LED_BUILTIN, HIGH);
+evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
 
-// instance Serial
-evHandlerSerial Keyboard;
+
 
 bool sleepOk = true;
-int  multi = 0; // nombre de clic rapide
+int multi = 0;  // nombre de clic rapide
 
 
 void setup() {
+  enableWiFiAtBootTime();  // mendatory for autoconnect WiFi with ESP8266 kernel 3.0
   // IO Setup
 #if defined(ESP8266)
   WiFi.forceSleepBegin();
-  //   WiFi.mode(WIFI_OFF);
-#elif defined(ESP32)
-  WiFi.mode(WIFI_OFF);
-  btStop();
+  //WiFi.mode(WIFI_OFF);
+//#elif defined(ESP32)
+//WiFi.mode(WIFI_OFF);
+//btStop();
 #endif
-  Serial.begin(115200);
-  Serial.println(F("\r\n\n" APP_NAME));
-  Serial.println(F("Test1"));
+  //Serial.begin(115200);
+  //Serial.println(F("\r\n\n" APP_NAME));
+  //Serial.println(F("Test1"));
   // Start instance
   Events.begin();
-  Serial.println(F("Test2"));
+  Serial.println(F("\r\n\n" APP_NAME));
   Led0.setFrequence(1, 10);
-    Serial.println(F("Test3"));
   Led1.setMillisec(2000, 10);
-    Serial.println(F("Test4"));
   Serial.println("Bonjour ....");
-  D_println(sizeof(stdEvent_t));
-  D_println(sizeof(size_t));
+  DV_println(sizeof(stdEvent_t));
+  DV_println(sizeof(size_t));
+  //Serial.println(sizeof(eventItem_t));
+  //DV_println(sizeof(delayEventItem_t));
+  //DV_println(sizeof(longDelayEventItem_t));
 }
 
 byte BP0Multi = 0;
@@ -155,20 +152,21 @@ void loop() {
   // test
   Events.get(sleepOk);
   Events.handle();
-  switch (Events.code)
-  {
+  switch (Events.code) {
 
 
 
-    case evInit: {
+    case evInit:
+      {
         Serial.println("ev init");
       }
       break;
-      
-    case ev24H: {
+
+    case ev24H:
+      {
         Serial.println("---- 24H ---");
         int aDay = Events.ext;
-        D_println(aDay);
+        DV_println(aDay);
       }
       break;
 
@@ -200,7 +198,6 @@ void loop() {
           BP0Multi = 0;
           Serial.println(F("BP0 Long Up"));
           break;
-
       }
       break;
     case evBP1:
@@ -210,7 +207,7 @@ void loop() {
           Serial.print(F("BP1 Down "));
           Serial.println(BP0.isOn() ? "and BP0 Down" : "and BP0 Up");
           break;
-        case evxOff :
+        case evxOff:
           Led1.setOn(false);
           Serial.println(F("BP1 Up"));
           break;
@@ -218,24 +215,29 @@ void loop() {
           Led1.setFrequence(1, 50);
           Serial.println(F("BP1 Long Down"));
           break;
-        case evxLongOff:  Serial.println(F("BP1 Long Up")); break;
-
+        case evxLongOff: Serial.println(F("BP1 Long Up")); break;
       }
       break;
 
 
 
     case ev1S:
-      Serial.print(F("Ram=")); Serial.println(Events.freeRam());
       Serial.println(F("EV1S"));
+      V_println(helperFreeRam());
+      V_println(Events.intExt);
+      V_println(Events.intExt2);
       break;
     case ev2S:
-      Serial.print(F("Ram=")); Serial.println(Events.freeRam());
+      V_println(helperFreeRam());
       Serial.println(F("EV2S"));
+      V_println(Events.intExt);
+      V_println(Events.intExt2);
       break;
     case ev3S:
-      Serial.print(F("Ram=")); Serial.println(Events.freeRam());
+      V_println(helperFreeRam());
       Serial.println(F("EV3S"));
+      V_println(Events.intExt);
+      V_println(Events.intExt2);
       break;
 
     case doReset:
@@ -244,8 +246,7 @@ void loop() {
 
 
     case evInChar:
-      switch (toupper(Events.charExt))
-      {
+      switch (toupper(Events.charExt)) {
         case '0': delay(10); break;
         case '1': delay(100); break;
         case '2': delay(200); break;
@@ -262,38 +263,46 @@ void loop() {
 
       if (Keyboard.inputString.equals(F("S"))) {
         sleepOk = !sleepOk;
-        Serial.print(F("Sleep=")); Serial.println(sleepOk);
+        Serial.print(F("Sleep="));
+        Serial.println(sleepOk);
         DV_println(*Events.StringPtr);
       }
 
       if (Keyboard.inputString.equals(F("O"))) {
         Serial.println(F("Push 3 delay events"));
-        Serial.print(F("Ram=")); Serial.println(Events.freeRam());
+        Serial.print(F("Ram="));
+        Serial.println(Events.freeRam());
         Events.delayedPush(500, ev1S);
         Events.delayedPush(11 * 1000, ev2S);
-        Events.delayedPush(11L * 60  * 1000, ev3S);
-        Serial.print(F("Ram=")); Serial.println(Events.freeRam());
+        Events.delayedPush(11L * 60 * 1000, ev3S);
+        Serial.print(F("Ram="));
+        Serial.println(Events.freeRam());
       }
       if (Keyboard.inputString.equals(F("P"))) {
         Serial.println(F("Push 3 delay events"));
-        Serial.print(F("Ram=")); Serial.println(Events.freeRam());
-        Events.delayedPush(1000, ev1S);
-        Events.delayedPush(2000, ev2S);
-        Events.delayedPush(3000, ev3S);
-        Serial.print(F("Ram=")); Serial.println(Events.freeRam());
+        Serial.print(F("Ram="));
+        Serial.println(Events.freeRam());
+        Events.delayedPush(1000, ev1S, 1111, 1102);
+        Events.delayedPush(2000, ev2S, 2222, 2202);
+        Events.delayedPush(3000, ev3S, 3333, 3302);
+        Serial.print(F("Ram="));
+        Serial.println(Events.freeRam());
       }
       if (Keyboard.inputString.equals(F("Q"))) {
         Serial.println(F("Push 3 events"));
-        Serial.print(F("Ram=")); Serial.println(Events.freeRam());
+        Serial.print(F("Ram="));
+        Serial.println(Events.freeRam());
         Events.delayedPush(0, ev1S);
         Events.delayedPush(0, ev2S);
         Events.delayedPush(0, ev3S);
-        Serial.print(F("Ram=")); Serial.println(Events.freeRam());
+        Serial.print(F("Ram="));
+        Serial.println(Events.freeRam());
       }
 
 
       if (Keyboard.inputString.equals(F("FREE"))) {
-        Serial.print(F("Ram=")); Serial.println(Events.freeRam());
+        Serial.print(F("Ram="));
+        Serial.println(Events.freeRam());
       }
 
       if (Keyboard.inputString.equals(F("RESET"))) {
@@ -302,6 +311,5 @@ void loop() {
       }
 
       break;
-
   }
 }
