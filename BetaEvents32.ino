@@ -87,7 +87,7 @@ enum tUserEventCode {
   evBP1,
   evLed0,
   evLed1,
-  ev1S,
+  ev1S = 151,
   ev2S,
   ev3S,
   // evenement action
@@ -282,9 +282,10 @@ void loop() {
         Serial.println(F("Push 3 delay events"));
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
-        Events.delayedPush(1000, ev1S, 1111, 1102);
-        Events.delayedPush(2000, ev2S, 2222, 2202);
-        Events.delayedPush(3000, ev3S, 3333, 3302);
+        Events.push(ev1S, 1011, 1002);
+        Events.delayedPush(1000, ev1S, 1111, 1102,true);
+        Events.delayedPush(2000, ev2S, 2222, 2202,false);
+        Events.delayedPush(3000, ev3S, 3333, 3302,false);
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
       }
@@ -292,9 +293,9 @@ void loop() {
         Serial.println(F("Push 3 events"));
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
-        Events.delayedPush(0, ev1S);
-        Events.delayedPush(0, ev2S);
-        Events.delayedPush(0, ev3S);
+        Events.delayedPush(0, ev1S,1,11,false);
+        Events.delayedPush(0, ev2S,2,12,false);
+        Events.delayedPush(0, ev3S,3,13,false);
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
       }

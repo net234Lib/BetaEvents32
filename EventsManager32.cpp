@@ -1,3 +1,4 @@
+#include "evHelpers.h"
 /*************************************************
      Sketch betaEvents.ino   validation of lib betaEvents to deal nicely with events programing with Arduino
     Copyright 2020 Pierre HENRY net23@frdev.com All - right reserved.
@@ -236,6 +237,7 @@ byte EventManager::nextEvent() {
     //stdEvent_t(*eventList);
     code = eventList->code;
     intExt = eventList->intExt;
+    intExt2 = eventList->intExt2;
     delete eventList;
     eventList = itemPtr;
     return (evManager.code);
@@ -286,14 +288,14 @@ void EventManager::handle() {
     ItemPtr = &((*ItemPtr)->next);
   }
   switch (code) {
-    // gestion des evenement avec delay au 100' de seconde
-    // todo  gerer des event repetitifs
+      // gestion des evenement avec delay au 100' de seconde
+      // todo  gerer des event repetitifs
 
-    //    case ev100Hz: {
-    //        parseDelayList( &(eventCentsList), aInt);
-    //      }
+      //    case ev100Hz: {
+      //        parseDelayList( &(eventCentsList), aInt);
+      //      }
 
-    //break;
+      //break;
 
     case ev10Hz:
       {
@@ -347,6 +349,14 @@ bool EventManager::push(const stdEvent_t& aevent) {
   eventItem_t** itemPtr = &(eventList);
   while (*itemPtr) itemPtr = &((*itemPtr)->nextItemPtr);
   *itemPtr = new eventItem_t(aevent);
+  if (aevent.code == 151) {
+    DT_println("debug ev1S");
+    DV_println(aevent.intExt);
+    DV_println(aevent.intExt2);
+    DV_println((*itemPtr)->code);
+    DV_println((*itemPtr)->intExt);
+    DV_println((*itemPtr)->intExt2);
+  }
   return (true);
 }
 
@@ -408,7 +418,7 @@ bool EventManager::delayedPush(const uint32_t delayMillisec, const uint8_t code,
 
 
 bool EventManager::delayedPush(const uint32_t delayMillisec, const uint8_t code, const int16_t param, const bool force) {
-  return(delayedPush(delayMillisec, code, param, 0, force));
+  return (delayedPush(delayMillisec, code, param, 0, force));
 }
 
 bool EventManager::removeDelayEventFromList(const byte codeevent, delayEventItem_t** nextItemPtr) {
