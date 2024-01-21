@@ -1,3 +1,4 @@
+#include <sys/_stdint.h>
 /*************************************************
     EventsManager.h   validation of lib betaEvents to deal nicely with events programing with Arduino
     Copyright 2020 Pierre HENRY net23@frdev.com All - right reserved.
@@ -91,12 +92,15 @@ struct stdEvent_t  {
   //  stdEvent_t(const uint8_t code = evNill, const int8_t ext = 0) : code(code), ext(ext) {}
   stdEvent_t() : code(evNill), intExt(0) {};
   stdEvent_t(const uint8_t code, const int aInt = 0) : code(code), intExt(aInt) {};
+  stdEvent_t(const uint8_t code, const int16_t int1, const int16_t int2 ) : code(code), intExt2(int2), intExt(int1) {};
   //stdEvent_t(const uint8_t code = evNill, const float aFloat = 0) : code(code), aFloat(aFloat) {};
   //  stdEvent_t(const uint8_t code = evNill, const uint8_t ext ) : code(code), ext(ext) {};
   //  stdEvent_t(const uint8_t code = evNill, const char aChar) : code(code), aChar(aChar) {};
 
-  stdEvent_t(const stdEvent_t& stdevent) : code(stdevent.code), data(stdevent.data) {}
+  stdEvent_t(const stdEvent_t& stdevent) : code(stdevent.code), data(stdevent.data), intExt2(stdevent.intExt2) {};
+  
   uint8_t code;       // code of the event
+  int16_t intExt2;
   union   {
     uint8_t ext;        // extCode of the event
     char    charExt;
@@ -147,9 +151,11 @@ class EventManager : public stdEvent_t
     bool   removeDelayEvent(const byte codeevent);
     bool   push(const stdEvent_t& eventPtr);
     bool   push(const uint8_t code, const int16_t param = 0);
+    bool   push(const uint8_t code, const int16_t param1 , const int16_t param2);
  //   bool   pushFloat(const uint8_t code, const float   afloat);
 
     bool   delayedPush(const uint32_t delayMillisec, const uint8_t code, const int16_t param = 0, const bool force = false);
+    bool   delayedPush(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2, const bool force );
     //    int    syncroSeconde(const int millisec = 0);
 #ifndef _Time_h
     friend byte   second() ;
