@@ -21,7 +21,7 @@
 
    History
     V1.0 (20/092022)
-   
+    V1.1  (22/01/2022) with OTA
 
     *************************************************/
 
@@ -35,7 +35,17 @@ static_assert(sizeof(time_t) == 8, "This version works with time_t 64bit  move t
 
 
 #include "EventsManager32.h"
-// Preinstantiate Objects /// as Nicolas Zambetti with Wire.cpp /////
+
+//WiFI
+#ifdef ESP8266
+//#include "ESP8266.h"
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#else
+#error "ESP8266 ESP8285 uniquement"
+#endif
+
+
 
 const int LED0_PIN = 13;
 const int RELAY0_PIN = 12;
@@ -74,12 +84,12 @@ evHandlerLed Relay0(evRelay0, RELAY0_PIN, LOW, 0);
 #define SERIAL_SPEED 115200
 #define SERIAL_BUFFERSIZE 100
 evHandlerSerial Keyboard(SERIAL_SPEED, SERIAL_BUFFERSIZE);
-evHandlerDebug  Debug;
+evHandlerDebug Debug;
 
 
 
 void setup() {
-  //enableWiFiAtBootTime();   // obligatoire pour kernel ESP > 3.0
+  enableWiFiAtBootTime();  // obligatoire pour kernel ESP > 3.0
   //WiFi.forceSleepBegin();
 
   // Start instance
@@ -88,8 +98,6 @@ void setup() {
   Led0.setFrequence(1, 10);
 
   Serial.println("Bonjour ....");
-  D_println(sizeof(stdEvent_t));
-  D_println(sizeof(size_t));
 }
 
 bool sleepOk = true;
@@ -114,14 +122,38 @@ void loop() {
       }
       break;
 
+    case evBP0:
+      switch (Events.ext) {
+        case evxOn:
+          {
+            Led0.setMillisec(500, 50);
+            Serial.println(F("BP0 On"));
+            bool Status = not Relay0.isOn();
+            V_println(Status);
+            Relay0.setOn(Status);
+          }
+          break;
+        case evxOff:
+          Led0.setMillisec(1000, 10);
+          Serial.println(F("BP0 Off"));
+          break;
+        case evxLongOn:
+          Serial.println(F("BP0 Long On"));
+          break;
+        case evxLongOff:
+          Serial.println(F("BP0 Long Off"));
+          break;
+      }
+      break;
+
     case evInChar:
       {
         if (Debug.trackTime < 2) {
           char aChar = Keyboard.inputChar;
           if (isPrintable(aChar)) {
-            D_println(aChar);
+            V_println(aChar);
           } else {
-            D_println(int(aChar));
+            V_println(int(aChar));
           }
         }
         switch (Keyboard.inputChar) {
@@ -137,19 +169,18 @@ void loop() {
 
     case evInString:
       if (Debug.trackTime < 2) {
-        D_println(Keyboard.inputString);
+        V_println(Keyboard.inputString);
       }
 
 
 
       if (Keyboard.inputString.equals(F("FREE"))) {
-        D_println(Events.freeRam());
+        V_println(Events.freeRam());
       }
       if (Keyboard.inputString.equals("S")) {
         sleepOk = !sleepOk;
-        D_println(sleepOk);
+        V_println(sleepOk);
       }
-      break;      
-      
+      break;
   }
 }

@@ -349,14 +349,6 @@ bool EventManager::push(const stdEvent_t& aevent) {
   eventItem_t** itemPtr = &(eventList);
   while (*itemPtr) itemPtr = &((*itemPtr)->nextItemPtr);
   *itemPtr = new eventItem_t(aevent);
-  if (aevent.code == 151) {
-    DT_println("debug ev1S");
-    DV_println(aevent.intExt);
-    DV_println(aevent.intExt2);
-    DV_println((*itemPtr)->code);
-    DV_println((*itemPtr)->intExt);
-    DV_println((*itemPtr)->intExt2);
-  }
   return (true);
 }
 
