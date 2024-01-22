@@ -117,7 +117,7 @@ void setup() {
     //WiFi.begin();
     //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   }
-    WiFi.begin();
+  WiFi.begin();
   deviceName = grabFromStringUntil(deviceName, ' ');
   deviceName += '_';
   deviceName += WiFi.macAddress().substring(12, 14);
@@ -180,7 +180,7 @@ void loop() {
     case evStartOta:
       {
         // start OTA
-        
+
         //ArduinoOTA.setHostname(deviceName.c_str());
         ArduinoOTA.begin();
         Events.delayedPush(1000L * 15 * 60, evStopOta);  // stop OTA dans 15 Min
@@ -213,6 +213,7 @@ void loop() {
           break;
         case evxLongOn:
           Serial.println(F("BP0 Long On"));
+          Events.push(evStartOta);
           break;
         case evxLongOff:
           Serial.println(F("BP0 Long Off"));
