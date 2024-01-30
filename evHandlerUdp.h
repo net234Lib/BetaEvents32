@@ -20,13 +20,16 @@
 
   History
 
-   works with beteEvents 2.0
+   works with betaEvents32 3.0
 
     V1.0  07/09/2022
     - gestion de message UDP pour communiquer en node avec des events
     V1.1  23/10/2023
     - passage des message udp en 100% Json (suggestion Artur)
     - TODO : ajouter une pile pour permetre d'envoyer plusieurs messages
+     V2.0  28/01/2024    version 32bit
+       ajout d'une liste chainee pour pour gerer les trames en full asynchrone
+
 
      *************************************************/
 #pragma once
@@ -47,7 +50,16 @@ typedef enum   {
 } tUdpEventExt;
 
 const int UDP_MAX_SIZE = 250;  // we handle short messages
+#include "bListe.h"
+class udpTxTrame : public BItem<udpTxTrame> {
+  public: 
+  udpTxTrame() {};
+};
 
+class udpTxList : public BItem<udpTxTrame> {
+  public: 
+  udpTxList() {};
+};
 
 class evHandlerUdp : public eventHandler_t {
   public:
@@ -55,7 +67,7 @@ class evHandlerUdp : public eventHandler_t {
     virtual void begin()  override;
     virtual void handle()  override;
     void broadcast(const String& aJsonStr);
-    void unicast(const IPAddress aIPAddress,const String& aJsonStr);
+    //void unicast(const IPAddress aIPAddress,const String& aJsonStr);
   private:
     void cast(const IPAddress aIPAddress);
 

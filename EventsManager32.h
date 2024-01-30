@@ -49,7 +49,7 @@
        TODO : faire une liste de get event separés
 
     V2.3    09/03/2022   isolation of evHandler for compatibility with dual core ESP32
-
+     V3.0 
  *************************************************/
 #pragma once
 #include <Arduino.h>
@@ -97,10 +97,10 @@ struct stdEvent_t  {
   //  stdEvent_t(const uint8_t code = evNill, const uint8_t ext ) : code(code), ext(ext) {};
   //  stdEvent_t(const uint8_t code = evNill, const char aChar) : code(code), aChar(aChar) {};
 
-  stdEvent_t(const stdEvent_t& stdevent) : code(stdevent.code), data(stdevent.data), intExt2(stdevent.intExt2) {};
+  stdEvent_t(const stdEvent_t& stdevent) : code(stdevent.code), data(stdevent.data), intExt2(stdevent.intExt2) {}; 
   
   uint8_t code;       // code of the event
-  int16_t intExt2;
+  int16_t intExt2;   // only in Manager32
   union   {
     uint8_t ext;        // extCode of the event
     char    charExt;

@@ -1,6 +1,6 @@
 /*************************************************
  *************************************************
-    Sketch sonoff_basic.ino   validation of lib betaEvents to deal nicely with events programing with Arduino
+    Sketch bSonoff_basic.ino   validation of lib betaEvents to deal nicely with events programing with Arduino
     Copyright 2020 Pierre HENRY net23@frdev.com All - right reserved.
 
     This file is part of betaEvents.
@@ -19,31 +19,42 @@
     along with betaEvents.  If not, see <https://www.gnu.org/licenses/lglp.txt>.
 
 
+  sonoff minimal permet d'allumer et d'eteindre le relais
+  avec gestion de l'OTA (desactivable) pour autoriser la programation sans connection
+  et la gestion des trames UDP compatible bNodes
+
    History
-    V1.0 (20/092022)
-    V1.1  (22/01/2022) with OTA
+    V1.0  (22/01/2022) with OTA
 
     *************************************************/
 
-//#include <ESP8266WiFi.h>
+
+#define OTA_ON  // desactiver pour retirer l'OTA
+
 // Definition des constantes pour les IO
 //#include "ESP8266.h"
 static_assert(sizeof(time_t) == 8, "This version works with time_t 64bit  move to ESP8266 kernel 3.0 or more");
 
-#define APP_NAME "SonoffBasic V1.0"
+#define APP_NAME "bSonoff_basic V1.0"
 
 
 
-#include "EventsManager32.h"
+#ifdef OTA_ON
+#include <ArduinoOTA.h>
+#endif
 
 //WiFI
 #ifdef ESP8266
 //#include "ESP8266.h"
 #include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
+//#include <ESP8266HTTPClient.h>
 #else
 #error "ESP8266 ESP8285 uniquement"
 #endif
+
+
+
+#include "EventsManager32.h"
 
 
 
@@ -69,6 +80,9 @@ enum tUserEventCode {
   evBP0 = 100,
   evLed0,
   evRelay0,
+  evStartOta,
+  evStopOta,
+
 };
 
 // poussoir
@@ -81,16 +95,33 @@ evHandlerLed Relay0(evRelay0, RELAY0_PIN, LOW, 0);
 
 
 // serial
-#define SERIAL_SPEED 115200
-#define SERIAL_BUFFERSIZE 100
-evHandlerSerial Keyboard(SERIAL_SPEED, SERIAL_BUFFERSIZE);
+
+evHandlerSerial Keyboard;
 evHandlerDebug Debug;
 
-
+String deviceName = APP_NAME;
 
 void setup() {
+
   enableWiFiAtBootTime();  // obligatoire pour kernel ESP > 3.0
-  //WiFi.forceSleepBegin();
+                           //  normaly not needed
+  if (WiFi.getMode() != WIFI_STA) {
+    Serial.println(F("!!! Force WiFi to STA mode !!!"));
+    WiFi.mode(WIFI_STA);
+    WiFi.setAutoConnect(true);
+    //WiFi.begin();
+    //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  }
+  WiFi.begin();
+  
+#ifdef OTA_ON
+  deviceName = grabFromStringUntil(deviceName, ' ');
+  deviceName += '_';
+  deviceName += WiFi.macAddress().substring(12, 14);
+  deviceName += WiFi.macAddress().substring(15, 17);
+  ArduinoOTA.setHostname(deviceName.c_str());
+#endif
+
 
   // Start instance
   Events.begin();
@@ -103,6 +134,11 @@ void setup() {
 bool sleepOk = true;
 
 void loop() {
+
+#ifdef OTA_ON
+  ArduinoOTA.handle();
+#endif
+
   Events.get(sleepOk);
   Events.handle();
   //D_println(Events.code);
@@ -113,6 +149,7 @@ void loop() {
 
     case evInit:
       Serial.println(F("Init"));
+      Events.delayedPush(3000, evStartOta);
       break;
 
 
@@ -121,6 +158,33 @@ void loop() {
         Serial.println(F("ev24H"));
       }
       break;
+
+#ifdef OTA_ON
+    case evStopOta:
+      Serial.println("Stop OTA");
+      //myUdp.broadcast("{\"info\":\"stop OTA\"}");
+      ArduinoOTA.end();
+      //writeHisto(F("Stop OTA"), nodeName);
+      break;
+
+    case evStartOta:
+      {
+        // start OTA
+
+        //ArduinoOTA.setHostname(deviceName.c_str());
+        ArduinoOTA.begin();
+        Events.delayedPush(1000L * 15 * 60, evStopOta);  // stop OTA dans 15 Min
+
+        Serial.print(F("OTA on '"));
+        Serial.print(deviceName);
+        Serial.println(F("' started."));
+        Serial.print(F("SSID:"));
+        Serial.println(WiFi.SSID());
+        //myUdp.broadcast("{\"info\":\"start OTA\"}");
+        //end start OTA
+      }
+      break;
+#endif
 
     case evBP0:
       switch (Events.ext) {
@@ -139,6 +203,7 @@ void loop() {
           break;
         case evxLongOn:
           Serial.println(F("BP0 Long On"));
+          Events.push(evStartOta);
           break;
         case evxLongOff:
           Serial.println(F("BP0 Long Off"));

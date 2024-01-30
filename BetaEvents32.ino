@@ -45,8 +45,8 @@
 
     V2.3    09/03/2022   isolation of evHandler for compatibility with dual core ESP32
     V2.4    30/09/2022   Isolation des IO (evhandlerOutput)
-    V3.0    Octobre 2024   Preparation d'un fork  BetaEvents / BetaEvent32
-     corrrection keyboard pour forcer une ligne de commande : setInputString(aStr);
+    V3.0    Octobre 2023   BetaEvent32
+     version specifique pour CPU 32 bit
     
     *************************************************/
 

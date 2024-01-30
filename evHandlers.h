@@ -148,7 +148,7 @@ class evHandlerButton : public eventHandler_t {
 
 class evHandlerSerial : public eventHandler_t {
   public:
-    evHandlerSerial(const uint32_t aSerialSpeed = 115200, const uint8_t inputStringSize = 20);
+    evHandlerSerial(const uint32_t aSerialSpeed = 115200, const uint8_t inputStringSize = 100);
     virtual void begin() override;
     //virtual void handle()  override;
     virtual byte get() override;

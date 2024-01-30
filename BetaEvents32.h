@@ -65,6 +65,7 @@ EventManager Events = EventManager();
 
 #define SERIAL_BUFFERSIZE 100
 
+
 evHandlerSerial Keyboard(SERIAL_SPEED,SERIAL_BUFFERSIZE);
 
 #ifndef NO_DEBUG

@@ -115,10 +115,10 @@ void EventManager::begin() {
   sleep_enable();
 #endif
   // parse event list
-  eventHandler_t** ItemPtr = &handleEventList;
-  while (*ItemPtr) {
-    (*ItemPtr)->begin();
-    ItemPtr = &((*ItemPtr)->next);
+  eventHandler_t* ItemPtr = handleEventList;
+  while (ItemPtr) {
+    (ItemPtr)->begin();
+    ItemPtr = ((ItemPtr)->next);
   }
 
   push(evInit);
@@ -205,14 +205,14 @@ byte EventManager::nextEvent() {
 
   if (delta100Hz >= 10) {
     intExt = (delta100Hz / 10);  // nombre d'ev100Hz d'un coup
-    delta100Hz -= (intExt)*10;
+    delta100Hz -= (intExt) * 10;
     return (code = ev100Hz);
   }
 
   // les ev10Hz ne sont pas tous restitués mais le nombre est dans aInt de l'event
   if (delta10Hz >= 100) {
     intExt = (delta10Hz / 100);  // nombre d'ev10Hz d'un coup
-    delta10Hz -= (intExt)*100;
+    delta10Hz -= (intExt) * 100;
     return (code = ev10Hz);
   }
 
@@ -224,10 +224,10 @@ byte EventManager::nextEvent() {
   }
 
   // gestionaire de getEvent
-  eventHandler_t** ItemPtr = &handleEventList;
-  while (*ItemPtr) {
-    if ((*ItemPtr)->get()) return (code);
-    ItemPtr = &((*ItemPtr)->next);
+  eventHandler_t* aItem = handleEventList;
+  while (aItem) {
+    if (aItem->get()) return (code);
+    aItem = aItem->next;
   }
 
   // les evenements sans delay sont geré ici
@@ -246,6 +246,8 @@ byte EventManager::nextEvent() {
   return (evManager.code = evNill);
 }
 
+
+// push tout les events perimés de la liste sinon decremente leur duree de vie
 void EventManager::parseDelayList(delayEventItem_t** ItemPtr, const uint16_t delay) {
   while (*ItemPtr) {
     if ((*ItemPtr)->delay > delay) {
@@ -288,14 +290,14 @@ void EventManager::handle() {
     ItemPtr = &((*ItemPtr)->next);
   }
   switch (code) {
-      // gestion des evenement avec delay au 100' de seconde
-      // todo  gerer des event repetitifs
+    // gestion des evenement avec delay au 100' de seconde
+    // todo  gerer des event repetitifs
 
-      //    case ev100Hz: {
-      //        parseDelayList( &(eventCentsList), aInt);
-      //      }
+    //    case ev100Hz: {
+    //        parseDelayList( &(eventCentsList), aInt);
+    //      }
 
-      //break;
+    //break;
 
     case ev10Hz:
       {
