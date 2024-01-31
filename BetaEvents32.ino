@@ -90,6 +90,7 @@ enum tUserEventCode {
   ev1S = 151,
   ev2S,
   ev3S,
+  evUdp,
   // evenement action
   doReset,
 };
@@ -109,7 +110,11 @@ evHandlerButton BP0(evBP0, BP0_PIN);
 evHandlerLed Led0(evLed0, LED_BUILTIN, HIGH);
 evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
 
-
+// init UDP
+#include "evHandlerUdp.h"
+String nodeName = "BetaEventsTest00";
+const unsigned int localUdpPort = 23423;  // local port to listen on
+evHandlerUdp myUdp(evUdp, localUdpPort, nodeName);
 
 bool sleepOk = true;
 int multi = 0;  // nombre de clic rapide
@@ -119,11 +124,17 @@ void setup() {
   enableWiFiAtBootTime();  // mendatory for autoconnect WiFi with ESP8266 kernel 3.0
   // IO Setup
 #if defined(ESP8266)
-  WiFi.forceSleepBegin();
+//  force Wifi en STA
+  if (WiFi.getMode() != WIFI_STA) {
+    Serial.println(F("!!! Force WiFi to STA mode !!!"));
+    WiFi.mode(WIFI_STA);
+    WiFi.setAutoConnect(true);
+    WiFi.begin();
+    //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  }
+ // WiFi.forceSleepBegin();
   //WiFi.mode(WIFI_OFF);
-//#elif defined(ESP32)
-//WiFi.mode(WIFI_OFF);
-//btStop();
+
 #endif
   //Serial.begin(115200);
   //Serial.println(F("\r\n\n" APP_NAME));
@@ -136,6 +147,9 @@ void setup() {
   Serial.println("Bonjour ....");
   DV_println(sizeof(stdEvent_t));
   DV_println(sizeof(size_t));
+  DV_println(sizeof(int));
+  DV_println(sizeof(long));
+  DV_println(sizeof(long long));
   //Serial.println(sizeof(eventItem_t));
   //DV_println(sizeof(delayEventItem_t));
   //DV_println(sizeof(longDelayEventItem_t));
@@ -154,11 +168,10 @@ void loop() {
   Events.handle();
   switch (Events.code) {
 
-
-
     case evInit:
       {
         Serial.println("ev init");
+        myUdp.broadcastInfo("Boot");
       }
       break;
 
@@ -300,10 +313,30 @@ void loop() {
         Serial.println(Events.freeRam());
       }
 
-
+ if (Keyboard.inputString.startsWith(F("WIFI="))) {
+        Serial.println(F("SETUP WIFI : 'WIFI= WifiName, password"));
+        String aStr = Keyboard.inputString;
+        grabFromStringUntil(aStr, '=');
+        String ssid = grabFromStringUntil(aStr, ',');
+        ssid.trim();
+        DV_println(ssid);
+        if (ssid != "") {
+          String pass = aStr;
+          pass.trim();
+          DV_println(pass);
+          bool result = WiFi.begin(ssid, pass);
+          //WiFi.setAutoConnect(true);
+          DV_println(WiFi.getAutoConnect());
+          Serial.print(F("WiFi begin "));
+          DV_println(result);
+        }
+      }
       if (Keyboard.inputString.equals(F("FREE"))) {
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
+        String aStr = F("FREE=");
+        aStr += String(Events.freeRam());
+        myUdp.broadcastInfo(aStr);
       }
 
       if (Keyboard.inputString.equals(F("RESET"))) {

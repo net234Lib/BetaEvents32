@@ -108,12 +108,12 @@ void evHandlerUdp::handle() {
   lastUDP = millis();
 
   // filtrage des trame repetitive
-  
+
   String bStr = grabFromStringUntil(aStr, ','); // should be {"TRAME":xxx,
   String cStr = grabFromStringUntil(bStr, ':'); // should be {"TRAME"
 
   if ( not ( cStr.equals(F("{\"TRAME\"")) and aStr.endsWith("}}}") ))  {  //
-    DTV_print("Bad paquet",cStr);
+    DTV_print("Bad paquet", cStr);
     DV_println(aStr);
     return;
   }
@@ -131,7 +131,7 @@ void evHandlerUdp::handle() {
   }
   //Todo : filtrer les 5 dernier UdpID ?
   lastUdpId = aUdpId;
- 
+
   // c'est une nouvelle trame
 
 
@@ -139,21 +139,27 @@ void evHandlerUdp::handle() {
 
   // Analyse de la suite : normalement "nodename":{ json struct }"
 
-  
+
 
   rxJson = '{';
   rxJson += aStr;
-     // D_print(rxHeader);
-     // D_print(rxNode);
-      DV_println(rxJson);
+  // D_print(rxHeader);
+  // D_print(rxNode);
+  DV_println(rxJson);
 
   evManager.push(evCode, evxUdpRxMessage);
 
 }
-
+void evHandlerUdp::broadcastInfo(const String& aTxt) {
+  //{"info":"Boot"}
+  String aJsonStr = F("{\"info\":\"");
+  aJsonStr += aTxt;
+  aJsonStr += "\"}";
+  broadcast(aJsonStr);
+}
 
 void evHandlerUdp::broadcast(const String & aJsonStr) {
-  T_println("Send broadcast ");
+
   unicast(broadcastIP, aJsonStr);
 }
 

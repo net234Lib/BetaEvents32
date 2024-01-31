@@ -30,6 +30,16 @@
      V2.0  28/01/2024    version 32bit
        ajout d'une liste chainee pour pour gerer les trames en full asynchrone
 
+    les trame btrame sont des trames courte moins de 100 char (200 maxi) transmise sur le port 23423 a un rhytme de 100 par secondes maximum
+    format de la trame :
+    {"TRAME":numTrame,"nodeName":{"typeDonee":{.....}}}
+    nodeName est le nom du module  il est suposé etre unique dans la ruche
+    typeDonnée  qualifie la donnée de base de la trame les nom FULL majuscules sont reservés 
+    TIME pour la transmission de l'heure
+    SYNC pour la transmission d'evenement de synchronisation ils sont prioritaires
+    Temperature : une temperature
+    Info : un message texte informatif
+
 
      *************************************************/
 #pragma once
@@ -67,13 +77,14 @@ class evHandlerUdp : public eventHandler_t {
     virtual void begin()  override;
     virtual void handle()  override;
     void broadcast(const String& aJsonStr);
-    //void unicast(const IPAddress aIPAddress,const String& aJsonStr);
+    void broadcastInfo(const String& aText);
+    void unicast(const IPAddress aIPAddress,const String& aJsonStr);
   private:
     void cast(const IPAddress aIPAddress);
 
-    uint8_t evCode;
-    uint16_t localPortNumber;
-    WiFiUDP UDP;
+    uint8_t evCode;             //evcode pour dialoguer avec l'application
+    uint16_t localPortNumber;   // port pour trame udp   en bNode classique  23423
+    WiFiUDP UDP;                // 
     String & nodename;  // pointeur sur l'identifiant du nodename
     String messageUDP;  // message UDP en cours d'emission
     IPAddress txIPDest; // ip de la destination de la trame
