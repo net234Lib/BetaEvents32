@@ -30,7 +30,8 @@ With UDP  (+5Krom +200ram)
 template<typename T>
 class BItem {
 public:
-  BItem() : _next(nullptr) {}
+  BItem()
+    : _next(nullptr) {}
   //T* next(T* aItem) {return(aItem->_next);}
   //protected:
   T* _next;
@@ -41,17 +42,26 @@ template<typename T>
 class BList {
 
 public:
-  BList() : _first(nullptr) {}
+  BList()
+    : _first(nullptr) {}
 
 
-//protected:
+  //protected:
   void _add(T* self) {
-    T* tmp = _first;
-    _first = self;
-    self->_next = tmp;
+
+    if (_first == nullptr) {
+      _first = self;
+      return;
+    }
+
+
+    T* prev = _first;
+    while (prev->_next) prev = prev->_next;
+    prev->_next = self;
   }
 
-  void _remove(T* self) {
+  void
+  _remove(T* self) {
     if (_first == self) {
       _first = self->_next;
       self->_next = 0;

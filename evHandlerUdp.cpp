@@ -40,6 +40,15 @@ const uint16_t delayInterUdp = 100;    // delay entre 2 trames
 const uint8_t numberOfTrame = 4;       // nombre de trame repetitives
 
 
+void udpTxList::add(const String& aJsonStr) {
+  if (++cntTrameUDP == 0) cntTrameUDP++;
+  BList::_add(new udpTxTrame(aJsonStr, numberOfTrame, cntTrameUDP));
+
+};  //ajout d'une trame dans la liste
+
+
+
+
 evHandlerUdp::evHandlerUdp(const uint8_t aEventCode, const uint16_t aPortNumber, String& aNodename)
   : evCode(aEventCode),
     localPortNumber(aPortNumber),
@@ -76,11 +85,11 @@ void evHandlerUdp::handle() {
           udpTxTrame* aTrame = txList._first;
 
 
-          if (castCnt > 0) {
+          if (aTrame->castCnt > 0) {
             send(txIPDest, aTrame);
-            --castCnt;
-            DV_println(castCnt);
-            if (castCnt == 0) {
+            --aTrame->castCnt;
+            DV_println(aTrame->castCnt);
+            if (aTrame->castCnt == 0) {
               DT_println("remove trame");
               txList._remove(aTrame);
               delete aTrame;
@@ -183,8 +192,8 @@ void evHandlerUdp::unicast(const IPAddress aIPAddress, const String& aJsonStr) {
   DTV_println("Send unicast ", aJsonStr);
   txList.add(aJsonStr);  // ajoute la trame a la liste
                          //  messageUDP = aJsonStr;
-  castCnt = numberOfTrame;
-  if (++numTrameUDP == 0) numTrameUDP++;
+
+  
   txIPDest = aIPAddress;
   if (!pendingUDP) {
     evManager.push(evCode, evxBcast);
@@ -198,7 +207,7 @@ void evHandlerUdp::send(const IPAddress aAddress, const udpTxTrame* aTrame) {
   String message;
   message.reserve(200);
   message = F("{\"TRAME\":");
-  message += numTrameUDP;
+  message += aTrame->numTrameUDP;
   message += ",\"";
   message += nodename;
   message += "\":";

@@ -50,6 +50,7 @@
 //#include <IPAddress.h>
 
 
+
 typedef enum   {
   // evenement recu
   evxUdpRxMessage,           // broadcast recu
@@ -63,16 +64,18 @@ const int UDP_MAX_SIZE = 250;  // we handle short messages
 #include "bListe.h"
 class udpTxTrame : public BItem<udpTxTrame> {
   public: 
-  udpTxTrame() {};
-   udpTxTrame(String aJsonStr) : jsonStr(aJsonStr) {};
-    
+  udpTxTrame() : castCnt(0) {};
+   udpTxTrame(const String& aJsonStr,const uint8_t castCnt,const uint8_t numTrameUDP) : jsonStr(aJsonStr), castCnt(castCnt), numTrameUDP(numTrameUDP) {};
+  uint8_t castCnt;      // compteur d'unicast a l'emission 
+  uint8_t numTrameUDP;  // numero de cette trame
   String jsonStr;
 };
 
 class udpTxList : public BList<udpTxTrame> {
   public: 
   udpTxList() {};
-  void add(const String &aJsonStr) {BList::_add(new udpTxTrame(aJsonStr));}; //ajout d'une trame dans la liste
+  void add(const String &aJsonStr); //ajout d'une trame dans la liste
+  uint8_t cntTrameUDP = 0; // compteur de trame UDP (de 1 a 199)
 };
 
 class evHandlerUdp : public eventHandler_t {
@@ -99,8 +102,8 @@ class evHandlerUdp : public eventHandler_t {
     IPAddress txIPDest; // ip de la destination de la trame
     //bool  pendingUDP = false;   // udp less than 500ms
     time_t  lastUDP;
-    uint8_t numTrameUDP = 0; // numeroteur de trame UDP (de 1 a 199)
-    uint8_t castCnt;      // compteur d'unicast a l'emission
+    
+    
     IPAddress lastUdpId;      // udp ID composé du numero de trame et des 3 dernier octet de l'IP
   public:
     IPAddress rxIPSender; // ip de la source de la trame
