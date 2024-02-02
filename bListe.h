@@ -1,3 +1,4 @@
+#include "evHelpers.h"
 /****************
  *  liste simplifiée pour EvManager
 
@@ -43,7 +44,7 @@ public:
   BList() : _first(nullptr) {}
 
 
-
+//protected:
   void _add(T* self) {
     T* tmp = _first;
     _first = self;
@@ -64,6 +65,7 @@ public:
         return;
       }
     }
+    DT_println("node not found!!!")
   }
 
   T* _first;

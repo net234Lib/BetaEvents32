@@ -124,7 +124,7 @@ void setup() {
   enableWiFiAtBootTime();  // mendatory for autoconnect WiFi with ESP8266 kernel 3.0
   // IO Setup
 #if defined(ESP8266)
-//  force Wifi en STA
+  //  force Wifi en STA
   if (WiFi.getMode() != WIFI_STA) {
     Serial.println(F("!!! Force WiFi to STA mode !!!"));
     WiFi.mode(WIFI_STA);
@@ -132,7 +132,7 @@ void setup() {
     WiFi.begin();
     //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   }
- // WiFi.forceSleepBegin();
+  // WiFi.forceSleepBegin();
   //WiFi.mode(WIFI_OFF);
 
 #endif
@@ -234,6 +234,28 @@ void loop() {
 
 
 
+
+    case evUdp:
+      if (Events.ext == evxUdpRxMessage) {
+        DTV_println("got an Event UDP", myUdp.rxJson);
+        String aStr = grabFromStringUntil(myUdp.rxJson, F("{\"CMD\":{\""));
+        if (myUdp.rxJson.length() == 0) {
+          DTV_println("Not a CMD", aStr);
+          break;
+        }
+
+        aStr = grabFromStringUntil(myUdp.rxJson, '"');
+        if (not aStr.equals(nodeName)) {
+          DTV_println("CMD not for me", aStr);
+          break;
+        }
+        grabFromStringUntil(myUdp.rxJson, '"');
+        aStr = grabFromStringUntil(myUdp.rxJson, '"');
+        aStr.trim();
+        if (aStr.length()) Keyboard.setInputString(aStr);
+      }
+      break;
+
     case ev1S:
       Serial.println(F("EV1S"));
       V_println(helperFreeRam());
@@ -296,9 +318,9 @@ void loop() {
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
         Events.push(ev1S, 1011, 1002);
-        Events.delayedPush(1000, ev1S, 1111, 1102,true);
-        Events.delayedPush(2000, ev2S, 2222, 2202,false);
-        Events.delayedPush(3000, ev3S, 3333, 3302,false);
+        Events.delayedPush(1000, ev1S, 1111, 1102, true);
+        Events.delayedPush(2000, ev2S, 2222, 2202, false);
+        Events.delayedPush(3000, ev3S, 3333, 3302, false);
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
       }
@@ -306,14 +328,20 @@ void loop() {
         Serial.println(F("Push 3 events"));
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
-        Events.delayedPush(0, ev1S,1,11,false);
-        Events.delayedPush(0, ev2S,2,12,false);
-        Events.delayedPush(0, ev3S,3,13,false);
+        Events.delayedPush(0, ev1S, 1, 11, false);
+        Events.delayedPush(0, ev2S, 2, 12, false);
+        Events.delayedPush(0, ev3S, 3, 13, false);
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
       }
+      if (Keyboard.inputString.equals(F("R"))) {
+        Serial.println(F("bCast 3 messages"));
+        myUdp.broadcastInfo(F("message1"));
+        myUdp.broadcastInfo(F("message2"));
+        myUdp.broadcastInfo(F("message3"));
+      }
 
- if (Keyboard.inputString.startsWith(F("WIFI="))) {
+      if (Keyboard.inputString.startsWith(F("WIFI="))) {
         Serial.println(F("SETUP WIFI : 'WIFI= WifiName, password"));
         String aStr = Keyboard.inputString;
         grabFromStringUntil(aStr, '=');

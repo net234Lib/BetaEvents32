@@ -64,11 +64,15 @@ const int UDP_MAX_SIZE = 250;  // we handle short messages
 class udpTxTrame : public BItem<udpTxTrame> {
   public: 
   udpTxTrame() {};
+   udpTxTrame(String aJsonStr) : jsonStr(aJsonStr) {};
+    
+  String jsonStr;
 };
 
-class udpTxList : public BItem<udpTxTrame> {
+class udpTxList : public BList<udpTxTrame> {
   public: 
   udpTxList() {};
+  void add(const String &aJsonStr) {BList::_add(new udpTxTrame(aJsonStr));}; //ajout d'une trame dans la liste
 };
 
 class evHandlerUdp : public eventHandler_t {
@@ -76,21 +80,26 @@ class evHandlerUdp : public eventHandler_t {
     evHandlerUdp(const uint8_t aEventCode, const uint16_t aPortNumber, String& aNodename);
     virtual void begin()  override;
     virtual void handle()  override;
-    void broadcast(const String& aJsonStr);
-    void broadcastInfo(const String& aText);
-    void unicast(const IPAddress aIPAddress,const String& aJsonStr);
+    // at this level 'cast' job just push trame in txList   trame will be send on next evXBcast
+    void broadcast(const String& aJsonStr);  // std broadcst
+    void broadcastInfo(const String& aText); // broadcast just a text
+    void unicast(const IPAddress aIPAddress,const String& aJsonStr);  // cast to a specific adress
   private:
-    void cast(const IPAddress aIPAddress);
-
+   
+    void send(const IPAddress aIPAddress, const udpTxTrame* aTrame); 
     uint8_t evCode;             //evcode pour dialoguer avec l'application
     uint16_t localPortNumber;   // port pour trame udp   en bNode classique  23423
-    WiFiUDP UDP;                // 
+    WiFiUDP UDP;                // gestionaire UDP
     String & nodename;  // pointeur sur l'identifiant du nodename
-    String messageUDP;  // message UDP en cours d'emission
+    udpTxList txList;   // Liste des message en attente
+    bool pendingUDP = false;  // indique qu'un event evCode,evxBcast est en attente
+
+
+    //String messageUDP;  // message UDP en cours d'emission
     IPAddress txIPDest; // ip de la destination de la trame
     //bool  pendingUDP = false;   // udp less than 500ms
     time_t  lastUDP;
-    uint8_t numTrameUDP = 0; // numeroteur de trame UDP
+    uint8_t numTrameUDP = 0; // numeroteur de trame UDP (de 1 a 199)
     uint8_t castCnt;      // compteur d'unicast a l'emission
     IPAddress lastUdpId;      // udp ID composé du numero de trame et des 3 dernier octet de l'IP
   public:
