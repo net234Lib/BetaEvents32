@@ -130,14 +130,18 @@ void evHandlerUdp::handle() {
 
   String aStr = udpPacketBuffer;
 
-  lastUDP = millis();
+  //lastUDP = millis();
 
   // filtrage des trame repetitive
 
-  String bStr = grabFromStringUntil(aStr, ',');  // should be {"TRAME":xxx,
-  String cStr = grabFromStringUntil(bStr, ':');  // should be {"TRAME"
-
-  if (not(cStr.equals(F("{\"TRAME\"")) and aStr.endsWith("}}}"))) {  //
+  String bStr = grabFromStringUntil(aStr, ',');                 // should be {"TRAME":xxx,
+  String cStr = grabFromStringUntil(bStr, ':');                 // should be {"TRAME"
+  if (cStr.equals(F("{\"ACK\"")) and aStr.endsWith("}")) {  //
+    DTV_print("ACK paquet", cStr);
+    DV_println(aStr);
+    return;
+  }
+  if (not(cStr.equals(F("{\"TRAME\"")) and aStr.endsWith("}}"))) {  //
     DTV_print("Bad paquet", cStr);
     DV_println(aStr);
     return;
@@ -162,7 +166,6 @@ void evHandlerUdp::handle() {
 
   bcast = (UDP.destinationIP() == broadcastIP);
 
-  // Analyse de la suite : normalement "nodename":{ json struct }"
 
 
 
@@ -170,7 +173,16 @@ void evHandlerUdp::handle() {
   rxJson += aStr;
   // D_print(rxHeader);
   // D_print(rxNode);
+  if (bcast) {
+    grabFromStringUntil(aStr,'"');
+    aStr = grabFromStringUntil(aStr,'"');
+    ack(trNum, aStr);
+  }
+
+
   DV_println(rxJson);
+
+
 
   evManager.push(evCode, evxUdpRxMessage);
 }
@@ -193,7 +205,7 @@ void evHandlerUdp::unicast(const IPAddress aIPAddress, const String& aJsonStr) {
   txList.add(aJsonStr);  // ajoute la trame a la liste
                          //  messageUDP = aJsonStr;
 
-  
+
   txIPDest = aIPAddress;
   if (!pendingUDP) {
     evManager.push(evCode, evxBcast);
@@ -215,6 +227,27 @@ void evHandlerUdp::send(const IPAddress aAddress, const udpTxTrame* aTrame) {
   message += '}';
 
   if (!UDP.beginPacket(aAddress, localPortNumber)) {
+    DT_println("Error sending UDP");
+    return;
+  }
+  DTV_println("UDP send", message);
+  UDP.write(message.c_str(), message.length());
+  UDP.endPacket();
+}
+
+void evHandlerUdp::ack(const uint8_t aNum, const String& aNodename) {
+  T_println("Send ack ");
+  String message;
+  message.reserve(200);
+  message = F("{\"ACK\":");
+  message += aNum;
+  message += ",\"";
+  message += aNodename;
+  message += "\":\"";
+  message += nodename;
+  message += "\"}";
+
+  if (!UDP.beginPacket(broadcastIP, localPortNumber)) {
     DT_println("Error sending UDP");
     return;
   }

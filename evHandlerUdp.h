@@ -33,6 +33,7 @@
     les trame btrame sont des trames courte moins de 100 char (200 maxi) transmise sur le port 23423 a un rhytme de 100 par secondes maximum
     format de la trame :
     {"TRAME":numTrame,"nodeName":{"typeDonee":{.....}}}
+    {"ACK":numTrame,"nodeName":"sendername"}
     nodeName est le nom du module  il est suposé etre unique dans la ruche
     typeDonnée  qualifie la donnée de base de la trame les nom FULL majuscules sont reservés 
     TIME pour la transmission de l'heure
@@ -87,9 +88,11 @@ class evHandlerUdp : public eventHandler_t {
     void broadcast(const String& aJsonStr);  // std broadcst
     void broadcastInfo(const String& aText); // broadcast just a text
     void unicast(const IPAddress aIPAddress,const String& aJsonStr);  // cast to a specific adress
+
   private:
    
     void send(const IPAddress aIPAddress, const udpTxTrame* aTrame); 
+    void ack(const uint8_t aNum, const String& aNodename );
     uint8_t evCode;             //evcode pour dialoguer avec l'application
     uint16_t localPortNumber;   // port pour trame udp   en bNode classique  23423
     WiFiUDP UDP;                // gestionaire UDP

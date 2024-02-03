@@ -54,7 +54,6 @@ public:
       return;
     }
 
-
     T* prev = _first;
     while (prev->_next) prev = prev->_next;
     prev->_next = self;
