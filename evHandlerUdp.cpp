@@ -134,11 +134,24 @@ void evHandlerUdp::handle() {
 
   // filtrage des trame repetitive
 
-  String bStr = grabFromStringUntil(aStr, ',');                 // should be {"TRAME":xxx,
-  String cStr = grabFromStringUntil(bStr, ':');                 // should be {"TRAME"
+  String bStr = grabFromStringUntil(aStr, ',');  // should be {"TRAME":xxx,
+  String cStr = grabFromStringUntil(bStr, ':');  // should be {"TRAME"
+  byte trNum = bStr.toInt();
+  // gestion des ACK
+  // TODO faire une pile de reception pour gerer les ack croisés
   if (cStr.equals(F("{\"ACK\"")) and aStr.endsWith("}")) {  //
-    DTV_print("ACK paquet", cStr);
-    DV_println(aStr);
+    DTV_println("got a ACK paquet", aStr);
+    grabFromStringUntil(aStr, '"');
+    bStr = grabFromStringUntil(aStr, '"');
+    if (bStr.equals(nodename)) {
+      DT_println("ACK for me");
+      if (trNum == txList._first->numTrameUDP) {
+        udpTxTrame* aTrame = txList._first;
+        txList._remove(aTrame);
+        delete aTrame;
+        DT_println("Remove first trame");
+      }
+    }
     return;
   }
   if (not(cStr.equals(F("{\"TRAME\"")) and aStr.endsWith("}}"))) {  //
@@ -146,7 +159,7 @@ void evHandlerUdp::handle() {
     DV_println(aStr);
     return;
   }
-  byte trNum = bStr.toInt();
+
 
   // UdpId is a mix of remote IP and EVENT number
   rxIPSender = UDP.remoteIP();
@@ -174,8 +187,8 @@ void evHandlerUdp::handle() {
   // D_print(rxHeader);
   // D_print(rxNode);
   if (bcast) {
-    grabFromStringUntil(aStr,'"');
-    aStr = grabFromStringUntil(aStr,'"');
+    grabFromStringUntil(aStr, '"');
+    aStr = grabFromStringUntil(aStr, '"');
     ack(trNum, aStr);
   }
 
