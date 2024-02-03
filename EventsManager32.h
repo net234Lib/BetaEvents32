@@ -97,7 +97,7 @@ struct stdEvent_t  {
   //  stdEvent_t(const uint8_t code = evNill, const uint8_t ext ) : code(code), ext(ext) {};
   //  stdEvent_t(const uint8_t code = evNill, const char aChar) : code(code), aChar(aChar) {};
 
-  stdEvent_t(const stdEvent_t& stdevent) : code(stdevent.code), data(stdevent.data), intExt2(stdevent.intExt2) {}; 
+  stdEvent_t(const stdEvent_t& stdevent) : code(stdevent.code), intExt2(stdevent.intExt2), data(stdevent.data) {}; 
   
   uint8_t code;       // code of the event
   int16_t intExt2;   // only in Manager32

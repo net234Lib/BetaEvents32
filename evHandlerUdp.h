@@ -66,7 +66,7 @@ const int UDP_MAX_SIZE = 250;  // we handle short messages
 class udpTxTrame : public BItem<udpTxTrame> {
   public: 
   udpTxTrame() : castCnt(0) {};
-   udpTxTrame(const String& aJsonStr,const uint8_t castCnt,const uint8_t numTrameUDP) : jsonStr(aJsonStr), castCnt(castCnt), numTrameUDP(numTrameUDP) {};
+   udpTxTrame(const String& aJsonStr,const uint8_t castCnt,const uint8_t numTrameUDP) :  castCnt(castCnt), numTrameUDP(numTrameUDP),jsonStr(aJsonStr) {};
   uint8_t castCnt;      // compteur d'unicast a l'emission 
   uint8_t numTrameUDP;  // numero de cette trame
   String jsonStr;
