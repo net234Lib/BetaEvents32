@@ -112,7 +112,7 @@ evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
 
 // init UDP
 #include "evHandlerUdp.h"
-String nodeName = "BetaEventsTest00";
+String nodeName = "BetaEvent32";
 const unsigned int localUdpPort = 23423;  // local port to listen on
 evHandlerUdp myUdp(evUdp, localUdpPort, nodeName);
 
@@ -246,7 +246,7 @@ void loop() {
 
         aStr = grabFromStringUntil(myUdp.rxJson, '"');
         if (not aStr.equals(nodeName)) {
-          DTV_println("CMD not for me", aStr);
+          DTV_println("CMD not ", aStr);
           break;
         }
         grabFromStringUntil(myUdp.rxJson, '"');

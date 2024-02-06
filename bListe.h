@@ -59,22 +59,23 @@ public:
     prev->_next = self;
   }
 
-  void
+  bool
   _remove(T* self) {
     if (_first == self) {
       _first = self->_next;
       self->_next = 0;
-      return;
+      return (true);
     }
 
     for (T* prev = _first; prev->_next; prev = prev->_next) {
       if (prev->_next == self) {
         prev->_next = self->_next;
         self->_next = 0;
-        return;
+        return (true);
       }
     }
     DT_println("node not found!!!")
+    return (false);
   }
 
   T* _first;

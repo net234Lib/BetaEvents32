@@ -91,8 +91,7 @@ void evHandlerUdp::handle() {
             DV_println(aTrame->castCnt);
             if (aTrame->castCnt == 0) {
               DT_println("remove trame");
-              txList._remove(aTrame);
-              delete aTrame;
+              if (txList._remove(aTrame)) delete aTrame;
             }
           }
 
@@ -139,18 +138,25 @@ void evHandlerUdp::handle() {
   byte trNum = bStr.toInt();
   // gestion des ACK
   // TODO faire une pile de reception pour gerer les ack croisés
+  //          et memorisé les modules presents
   if (cStr.equals(F("{\"ACK\"")) and aStr.endsWith("}")) {  //
     DTV_println("got a ACK paquet", aStr);
     grabFromStringUntil(aStr, '"');
     bStr = grabFromStringUntil(aStr, '"');
     if (bStr.equals(nodename)) {
-      DT_println("ACK for me");
-      if (trNum == txList._first->numTrameUDP) {
-        udpTxTrame* aTrame = txList._first;
-        txList._remove(aTrame);
-        delete aTrame;
-        DT_println("Remove first trame");
+      udpTxTrame* aTrame = txList._first;
+      if (aTrame) {
+        DT_println("ACK for me");
+        if (trNum == aTrame->numTrameUDP) {
+
+
+          if (txList._remove(aTrame)) delete aTrame;
+          DT_println("Remove first trame");
+          return;
+        }
+        
       }
+      DT_println("already ACK");
     }
     return;
   }
