@@ -47,10 +47,11 @@
     V2.4    30/09/2022   Isolation des IO (evhandlerOutput)
     V3.0    Octobre 2023   BetaEvent32
      version specifique pour CPU 32 bit
+     V3.0.B3  02/2024   delayedevent  remove ALL  previous evants
     
     *************************************************/
 
-#define APP_NAME "betaEvents V3.0.B2"
+#define APP_NAME "betaEvents V3.0.B3"
 
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>

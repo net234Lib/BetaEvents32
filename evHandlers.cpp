@@ -109,7 +109,7 @@ void evHandlerLed::handle() {
       case evxBlink:
         evManager.push(evCode, (percent > 0) ? evxOn : evxOff);  // si percent d'allumage = 0 on allume pas
         if (percent > 0 && percent < 100) {                      // si percent = 0% ou 100% on ne clignote pas
-          evManager.delayedPush(millisecondes * percent / 100, evCode, evxOff);
+          evManager.delayedPush(millisecondes * percent / 100, evCode, evxOff,false);
           evManager.delayedPush(millisecondes, evCode, evxBlink, true);
         }
         break;

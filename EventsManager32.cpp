@@ -393,7 +393,7 @@ void EventManager::addLongDelayEvent(longDelayEventItem_t** ItemPtr, longDelayEv
 bool EventManager::delayedPush(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2, const bool force) {
 
 
-  if (!force) removeDelayEvent(code);
+  if (!force) while (removeDelayEvent(code)) {};
   if (delayMillisec == 0) {
     return (push(code, param1, param2));
   }
