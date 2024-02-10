@@ -66,7 +66,7 @@ void evHandlerUdp::handle() {
             cast(txIPDest);
             --castCnt;
           } // else D_println(unicastCnt);
-          if (castCnt > 0) evManager.delayedPush(delayInterUdp, evCode, evxBcast);
+          if (castCnt > 0) evManager.delayedPushMilli(delayInterUdp, evCode, evxBcast);
         }
         break;
     }
@@ -144,7 +144,7 @@ void evHandlerUdp::unicast(const IPAddress aIPAddress,const String& aJsonStr) {
   castCnt = numberOfTrame;
   if (++numTrameUDP == 0) numTrameUDP++;
   txIPDest = aIPAddress;
-  evManager.delayedPush(0,evCode, evxBcast);  // clear pending bcast
+  evManager.delayedPushMilli(0,evCode, evxBcast);  // clear pending bcast
 }
 
 

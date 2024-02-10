@@ -205,14 +205,14 @@ byte EventManager::nextEvent() {
 
   if (delta100Hz >= 10) {
     intExt = (delta100Hz / 10);  // nombre d'ev100Hz d'un coup
-    delta100Hz -= (intExt) * 10;
+    delta100Hz -= (intExt)*10;
     return (code = ev100Hz);
   }
 
   // les ev10Hz ne sont pas tous restitués mais le nombre est dans aInt de l'event
   if (delta10Hz >= 100) {
     intExt = (delta10Hz / 100);  // nombre d'ev10Hz d'un coup
-    delta10Hz -= (intExt) * 100;
+    delta10Hz -= (intExt)*100;
     return (code = ev10Hz);
   }
 
@@ -290,14 +290,14 @@ void EventManager::handle() {
     ItemPtr = &((*ItemPtr)->next);
   }
   switch (code) {
-    // gestion des evenement avec delay au 100' de seconde
-    // todo  gerer des event repetitifs
+      // gestion des evenement avec delay au 100' de seconde
+      // todo  gerer des event repetitifs
 
-    //    case ev100Hz: {
-    //        parseDelayList( &(eventCentsList), aInt);
-    //      }
+      //    case ev100Hz: {
+      //        parseDelayList( &(eventCentsList), aInt);
+      //      }
 
-    //break;
+      //break;
 
     case ev10Hz:
       {
@@ -389,11 +389,8 @@ void EventManager::addLongDelayEvent(longDelayEventItem_t** ItemPtr, longDelayEv
 
 
 
+bool EventManager::forceDelayedPushMilli(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2) {
 
-bool EventManager::delayedPush(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2, const bool force) {
-
-
-  if (!force) while (removeDelayEvent(code)) {};
   if (delayMillisec == 0) {
     return (push(code, param1, param2));
   }
@@ -411,8 +408,14 @@ bool EventManager::delayedPush(const uint32_t delayMillisec, const uint8_t code,
 }
 
 
-bool EventManager::delayedPush(const uint32_t delayMillisec, const uint8_t code, const int16_t param, const bool force) {
-  return (delayedPush(delayMillisec, code, param, 0, force));
+bool EventManager::delayedPushMilli(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2) {
+  while (removeDelayEvent(code)) {};
+  return (forceDelayedPushMilli(delayMillisec, code, param1, param2));
+}
+
+bool EventManager::delayedPushMilli(const uint32_t delayMillisec, const uint8_t code) {
+  while (removeDelayEvent(code)) {};
+  return (forceDelayedPushMilli(delayMillisec, code));
 }
 
 bool EventManager::removeDelayEventFromList(const byte codeevent, delayEventItem_t** nextItemPtr) {

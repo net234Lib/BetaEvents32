@@ -269,25 +269,25 @@ void loop() {
       if (Keyboard.inputString.equals(F("O"))) {
         Serial.println(F("Push 3 delay events"));
         Serial.print(F("Ram=")); Serial.println(helperFreeRam());
-        Events.delayedPush(500, ev1S);
-        Events.delayedPush(11 * 1000, ev2S);
-        Events.delayedPush(11L * 60  * 1000, ev3S);
+        Events.delayedPushMilli(500, ev1S);
+        Events.delayedPushMilli(11 * 1000, ev2S);
+        Events.delayedPushMilli(11L * 60  * 1000, ev3S);
         Serial.print(F("Ram=")); Serial.println(helperFreeRam());
       }
       if (Keyboard.inputString.equals(F("P"))) {
         Serial.println(F("Push 3 delay events"));
         Serial.print(F("Ram=")); Serial.println(helperFreeRam());
-        Events.delayedPush(1000, ev1S);
-        Events.delayedPush(2000, ev2S);
-        Events.delayedPush(3000, ev3S);
+        Events.delayedPushMilli(1000, ev1S);
+        Events.delayedPushMilli(2000, ev2S);
+        Events.delayedPushMilli(3000, ev3S);
         Serial.print(F("Ram=")); Serial.println(helperFreeRam());
       }
       if (Keyboard.inputString.equals(F("Q"))) {
         Serial.println(F("Push 3 events"));
         Serial.print(F("Ram=")); Serial.println(helperFreeRam());
-        Events.delayedPush(0, ev1S);
-        Events.delayedPush(0, ev2S);
-        Events.delayedPush(0, ev3S);
+        Events.delayedPushMilli(0, ev1S);
+        Events.delayedPushMilli(0, ev2S);
+        Events.delayedPushMilli(0, ev3S);
         Serial.print(F("Ram=")); Serial.println(helperFreeRam());
       }
 

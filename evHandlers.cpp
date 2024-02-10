@@ -82,11 +82,11 @@ void evHandlerOutput::setOn(const bool status) {
 
 void evHandlerOutput::pulse(const uint32_t aDelay) {  // pulse d'allumage simple
   if (aDelay == 0) {
-    evManager.delayedPush(0, evCode, evxOff);
+    evManager.delayedPushMilli(0, evCode, evxOff);
     return;
   }
-  evManager.delayedPush(0, evCode, evxOn);
-  evManager.delayedPush(aDelay, evCode, evxOff, false);
+  evManager.delayedPushMilli(0, evCode, evxOn);
+  evManager.delayedPushMilli(aDelay, evCode, evxOff);
 }
 
 
@@ -109,8 +109,8 @@ void evHandlerLed::handle() {
       case evxBlink:
         evManager.push(evCode, (percent > 0) ? evxOn : evxOff);  // si percent d'allumage = 0 on allume pas
         if (percent > 0 && percent < 100) {                      // si percent = 0% ou 100% on ne clignote pas
-          evManager.delayedPush(millisecondes * percent / 100, evCode, evxOff,false);
-          evManager.delayedPush(millisecondes, evCode, evxBlink, true);
+          evManager.delayedPushMilli(millisecondes * percent / 100, evCode, evxOff);
+          evManager.forceDelayedPushMilli(millisecondes, evCode, evxBlink);
         }
         break;
     }
@@ -126,7 +126,7 @@ void evHandlerLed::setOn(const bool status) {
 void evHandlerLed::setMillisec(const uint16_t aMillisecondes, const uint8_t aPercent) {
   millisecondes = max(aMillisecondes, (uint16_t)2);
   percent = aPercent;
-  evManager.delayedPush(0, evCode, evxBlink);
+  evManager.delayedPushMilli(0, evCode, evxBlink);
 }
 
 void evHandlerLed::setFrequence(const uint8_t frequence, const uint8_t percent) {
@@ -159,10 +159,10 @@ void evHandlerButton::handle() {
       state = !state;
       if (state) {
         evManager.push(evCode, evxOn);
-        evManager.delayedPush(longDelay, evCode, evxLongOn);  // arme un event BP long On
+        evManager.delayedPushMilli(longDelay, evCode, evxLongOn);  // arme un event BP long On
       } else {
         evManager.push(evCode, evxOff);
-        evManager.delayedPush(longDelay, evCode, evxLongOff);  // arme un event BP long Off
+        evManager.delayedPushMilli(longDelay, evCode, evxLongOff);  // arme un event BP long Off
       }
     }
   }

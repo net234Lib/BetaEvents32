@@ -205,7 +205,7 @@ void loop() {
       {
         Serial.println("Init");
 
-        Events.delayedPush(5000, evStartOta);
+        Events.delayedPushMilli(5000, evStartOta);
         myUdp.broadcast("{\"info\":\"Boot\"}");
       }
       break;
@@ -301,7 +301,7 @@ void loop() {
 
         ArduinoOTA.setHostname(deviceName.c_str());
         ArduinoOTA.begin();
-        Events.delayedPush(1000L * 15 * 60, evStopOta);  // stop OTA dans 15 Min
+        Events.delayedPushMilli(1000L * 15 * 60, evStopOta);  // stop OTA dans 15 Min
 
         //MDNS.update();
         Serial.print("OTA on '");

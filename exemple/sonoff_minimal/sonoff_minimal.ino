@@ -159,7 +159,7 @@ void loop() {
 
     case evInit:
       Serial.println(F("Init"));
-      Events.delayedPush(3000, evStartOta);
+      Events.delayedPushMilli(3000, evStartOta);
       break;
 
 
@@ -183,7 +183,7 @@ void loop() {
 
         //ArduinoOTA.setHostname(deviceName.c_str());
         ArduinoOTA.begin();
-        Events.delayedPush(1000L * 15 * 60, evStopOta);  // stop OTA dans 15 Min
+        Events.delayedPushMilli(1000L * 15 * 60, evStopOta);  // stop OTA dans 15 Min
 
         Serial.print(F("OTA on '"));
         Serial.print(deviceName);
