@@ -109,10 +109,10 @@ void setup() {
     Serial.println(F("!!! Force WiFi to STA mode !!!"));
     WiFi.mode(WIFI_STA);
     WiFi.setAutoConnect(true);
-    //WiFi.begin();
+    WiFi.begin();
     //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   }
-  WiFi.begin();
+
   
 #ifdef OTA_ON
   deviceName = grabFromStringUntil(deviceName, ' ');
@@ -128,6 +128,12 @@ void setup() {
   Serial.println(F("\r\n\n" APP_NAME));
   Led0.setFrequence(1, 10);
 
+  Serial.println("Wait a for wifi");
+  for (int N = 0; N < 50; N++) {
+    if (WiFi.status() == WL_CONNECTED) break;
+    delay(100);
+  }
+  
   Serial.println("Bonjour ....");
 }
 

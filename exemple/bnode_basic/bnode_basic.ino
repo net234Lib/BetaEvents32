@@ -186,7 +186,11 @@ void setup() {
   }
   DV_println(timeZone);
 
-
+  Serial.println("Wait a for wifi");
+  for (int N = 0; N < 50; N++) {
+    if (WiFi.status() == WL_CONNECTED) break;
+    delay(100);
+  }
 
 
   Serial.println("Bonjour ....");
@@ -235,7 +239,7 @@ void loop() {
       break;
     case evInit:
       Serial.println(F("Init"));
-      Events.delayedPushMilli(3000, evStartOta);
+      Events.delayedPushMilli(500, evStartOta);
       break;
 
 
