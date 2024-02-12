@@ -47,6 +47,7 @@ public:
 
 
   //protected:
+  //Ajout a la fin (FIFO)
   void _add(T* self) {
 
     if (_first == nullptr) {

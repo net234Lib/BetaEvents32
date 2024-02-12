@@ -120,7 +120,7 @@ evHandlerUdp myUdp(evUdp, localUdpPort, nodeName);
 
 bool sleepOk = true;
 int multi = 0;  // nombre de clic rapide
-
+bool sendInfo = false;
 
 void setup() {
   enableWiFiAtBootTime();  // mendatory for autoconnect WiFi with ESP8266 kernel 3.0
@@ -174,6 +174,14 @@ void loop() {
       {
         Serial.println("ev init");
         myUdp.broadcastInfo("Boot");
+      }
+      break;
+
+    case ev1Hz:
+      if (sendInfo) {
+        String aStr = F("SECONDE=");
+        aStr += second();
+        myUdp.broadcastInfo(aStr);
       }
       break;
 
@@ -304,6 +312,10 @@ void loop() {
         Serial.println(sleepOk);
         DV_println(*Events.StringPtr);
       }
+      if (Keyboard.inputString.equals(F("B"))) {
+        sendInfo = !sendInfo;
+        DV_println(sendInfo);
+      }
 
       if (Keyboard.inputString.equals(F("O"))) {
         Serial.println(F("Push 3 delay events"));
@@ -330,9 +342,9 @@ void loop() {
         Serial.println(F("Push 3 events"));
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
-        Events.delayedPushMilli(0, ev1S, 1, 11 );
-        Events.delayedPushMilli(0, ev2S, 2, 12 );
-        Events.delayedPushMilli(0, ev3S, 3, 13 );
+        Events.delayedPushMilli(0, ev1S, 1, 11);
+        Events.delayedPushMilli(0, ev2S, 2, 12);
+        Events.delayedPushMilli(0, ev3S, 3, 13);
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
       }

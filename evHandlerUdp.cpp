@@ -35,14 +35,14 @@
 
 //WiFiUDP UDP;
 
-const uint16_t delaySilenceUdp = 300;  // delay de silence avant d'envoyer les trames
-const uint16_t delayInterUdp = 100;    // delay entre 2 trames
-const uint8_t numberOfTrame = 4;       // nombre de trame repetitives
+//const uint16_t delaySilenceUdp = 300;  // delay de silence avant d'envoyer les trames
+const uint16_t delayInterUdp = 150;    // delay entre 2 trames
+const uint8_t numberOfTrame = 3;       // nombre de trame repetitives
 
 
-void udpTxList::add(const String& aJsonStr) {
+void udpTxList::add(const String& aJsonStr, const IPAddress aIp) {
   if (++cntTrameUDP == 0) cntTrameUDP++;
-  BList::_add(new udpTxTrame(aJsonStr, numberOfTrame, cntTrameUDP));
+  BList::_add(new udpTxTrame(aJsonStr, numberOfTrame, cntTrameUDP, aIp));
 
 };  //ajout d'une trame dans la liste
 
@@ -67,144 +67,157 @@ void evHandlerUdp::begin() {
   UDP.begin(localPortNumber);
 }
 
+//check for waiting udp
+byte evHandlerUdp::get() {
+  if (UDP.parsePacket()) {
+    //Serial.print('.');
+    evManager.ext = evxRxUdp;
+    return (evManager.code = evCode);
+  }
+  return (evNill);
+}
+
+
 void evHandlerUdp::handle() {
-  if (evManager.code == evCode) {
+  if (evManager.code != evCode) return;
 
-    // broadcst out = send unicast  castCnt  fois
+  // broadcst out = send unicast  castCnt  fois
+  switch (evManager.ext) {
+    case evxBcast:
+      {
 
-    switch (evManager.ext) {
-      case evxBcast:
-        {
-
-          if (!txList._first) {
-            pendingUDP = false;
-            DT_println("stop evxBcast");
-            break;
-          }
-          evManager.delayedPushMilli(delayInterUdp, evCode, evxBcast);
-          udpTxTrame* aTrame = txList._first;
-
-
-          if (aTrame->castCnt > 0) {
-            send(txIPDest, aTrame);
-            --aTrame->castCnt;
-            DV_println(aTrame->castCnt);
-            if (aTrame->castCnt == 0) {
-              DT_println("remove trame");
-              if (txList._remove(aTrame)) delete aTrame;
-            }
-          }
-
-
+        if (!txList._first) {
+          pendingUDP = false;
+          DT_println("stop evxBcast");
           break;
         }
-        return;
-    }
-  }
-
-  // check for reception
-  if (evManager.code != evNill) return;
-  int packetSize = UDP.parsePacket();
-  if (packetSize == 0) return;
-
-  T_println("Received packet UDP");
-  //  Serial.printf("Received packet of size % d from % s: % d\n    (to % s: % d, free heap = % d B)\n",
-  //                packetSize,
-  //                UDP.remoteIP().toString().c_str(), UDP.remotePort(),
-  //                UDP.destinationIP().toString().c_str(), UDP.localPort(),
-  //                ESP.getFreeHeap());
-
-  char udpPacketBuffer[UDP_MAX_SIZE + 1];  //buffer to hold incoming packet,
-  int size = UDP.read(udpPacketBuffer, UDP_MAX_SIZE);
-
-  //  // read the packet into packetBufffer
-  //  if (packetSize > UDP_MAX_SIZE) {
-  //    Serial.printf("UDP too big ");
-  //    return;
-  //  }
-
-  //TODO: clean this   cleanup line feed
-  if (size > 0 && udpPacketBuffer[size - 1] == '\n') size--;
-  udpPacketBuffer[size] = 0;
-
-  String aStr = udpPacketBuffer;
-
-  //lastUDP = millis();
-
-  // filtrage des trame repetitive
-
-  String bStr = grabFromStringUntil(aStr, ',');  // should be {"TRAME":xxx,
-  String cStr = grabFromStringUntil(bStr, ':');  // should be {"TRAME"
-  byte trNum = bStr.toInt();
-  // gestion des ACK
-  // TODO faire une pile de reception pour gerer les ack croisés
-  //          et memorisé les modules presents
-  if (cStr.equals(F("{\"ACK\"")) and aStr.endsWith("}")) {  //
-    DTV_println("got a ACK paquet", aStr);
-    grabFromStringUntil(aStr, '"');
-    bStr = grabFromStringUntil(aStr, '"');
-    if (bStr.equals(nodename)) {
-      udpTxTrame* aTrame = txList._first;
-      if (aTrame) {
-        DT_println("ACK for me");
-        if (trNum == aTrame->numTrameUDP) {
+        evManager.delayedPushMilli(delayInterUdp, evCode, evxBcast);
+        udpTxTrame* aTrame = txList._first;
 
 
-          if (txList._remove(aTrame)) delete aTrame;
-          DT_println("Remove first trame");
-          return;
+        if (aTrame->castCnt > 0) {
+          send(aTrame);
+          --aTrame->castCnt;
+          DV_println(aTrame->castCnt);
+          if (aTrame->castCnt == 0) {
+            DT_println("remove trame");
+            if (txList._remove(aTrame)) delete aTrame;
+            ackCnt = 0;
+          }
         }
-        
+
+
+        break;
       }
-      DT_println("already ACK");
-    }
-    return;
+      break;
+
+    case evxRxUdp:
+      {
+        // check for reception
+        //int packetSize = UDP.parsePacket();
+        //DV_println(packetSize);
+        //if (packetSize == 0) break;
+
+        DT_println("Received packet UDP");
+        //DV_println(packetSize);
+        //  Serial.printf("Received packet of size % d from % s: % d\n    (to % s: % d, free heap = % d B)\n",
+        //                packetSize,
+        //                UDP.remoteIP().toString().c_str(), UDP.remotePort(),
+        //                UDP.destinationIP().toString().c_str(), UDP.localPort(),
+        //                ESP.getFreeHeap());
+
+        char udpPacketBuffer[UDP_MAX_SIZE + 1];  //buffer to hold incoming packet,
+        int size = UDP.read(udpPacketBuffer, UDP_MAX_SIZE);
+        //DV_println(size);
+        //  // read the packet into packetBufffer
+        //  if (packetSize > UDP_MAX_SIZE) {
+        //    Serial.printf("UDP too big ");
+        //    return;
+        //  }
+
+        //TODO: clean this   cleanup line feed
+        if (size > 0 && udpPacketBuffer[size - 1] == '\n') size--;
+        udpPacketBuffer[size] = 0;
+
+        String aStr = udpPacketBuffer;
+
+        // filtrage des trame repetitive
+
+        String bStr = grabFromStringUntil(aStr, ',');  // should be {"TRAME":xxx,
+        String cStr = grabFromStringUntil(bStr, ':');  // should be {"TRAME"
+        byte trNum = bStr.toInt();
+        // gestion des ACK
+        // TODO faire une pile de reception pour gerer les ack croisés
+        //          et memorisé les modules presents
+        //'{"ACK":153,"bLed256C":"BetaEvent32"}'
+        if (cStr.equals(F("{\"ACK\"")) and aStr.endsWith("}")) {  //  trame valide
+          DTV_println("got a ACK paquet", aStr);
+          grabFromStringUntil(aStr, '"');
+          bStr = grabFromStringUntil(aStr, '"');  //
+          if (bStr.equals(nodename)) {
+            udpTxTrame* aTrame = txList._first;
+            if (aTrame) {
+              DT_println("ACK for me");
+              if (trNum == aTrame->numTrameUDP) {
+
+
+                if (txList._remove(aTrame)) delete aTrame;
+                DT_println("Remove first trame");
+                break;
+              }
+            }
+            DT_println("already ACK");
+            if (ackPercent > 10) {
+              ackPercent--;
+              DV_println(ackPercent);
+            }
+          }
+          break;
+        }
+        if (not(cStr.equals(F("{\"TRAME\"")) and aStr.endsWith("}}"))) {  //
+          DTV_print("Bad paquet", cStr);
+          DV_println(aStr);
+          break;
+        }
+        // UdpId is a mix of remote IP and EVENT number
+        rxIPSender = UDP.remoteIP();
+        IPAddress aUdpId = rxIPSender;
+        aUdpId[0] = trNum;
+
+        //C'est un doublon USP
+        if (aUdpId == lastUdpId) {
+          T_println("Doublon UDP");
+          if (ackPercent<100) {
+            ackPercent++;
+            DV_println(ackPercent);
+          }
+          break;
+        }
+        //Todo : filtrer les 5 dernier UdpID ?
+        lastUdpId = aUdpId;
+
+        // c'est une nouvelle trame
+        bcast = (UDP.destinationIP() == broadcastIP);
+
+        rxJson = '{';
+        rxJson += aStr;
+        // D_print(rxHeader);
+        // D_print(rxNode);
+        if (bcast and (random(100) < ackPercent)) {
+          grabFromStringUntil(aStr, '"');
+          aStr = grabFromStringUntil(aStr, '"');
+          ack(trNum, aStr);
+        }
+
+        DV_println(rxJson);
+        evManager.push(evCode, evxUdpRxMessage);
+        break;
+      }
+      break;
   }
-  if (not(cStr.equals(F("{\"TRAME\"")) and aStr.endsWith("}}"))) {  //
-    DTV_print("Bad paquet", cStr);
-    DV_println(aStr);
-    return;
-  }
-
-
-  // UdpId is a mix of remote IP and EVENT number
-  rxIPSender = UDP.remoteIP();
-  IPAddress aUdpId = rxIPSender;
-  aUdpId[0] = trNum;
-
-  //C'est un doublon USP
-  if (aUdpId == lastUdpId) {
-    T_println("Doublon UDP");
-    return;
-  }
-  //Todo : filtrer les 5 dernier UdpID ?
-  lastUdpId = aUdpId;
-
-  // c'est une nouvelle trame
-
-
-  bcast = (UDP.destinationIP() == broadcastIP);
-
-
-
-
-  rxJson = '{';
-  rxJson += aStr;
-  // D_print(rxHeader);
-  // D_print(rxNode);
-  if (bcast) {
-    grabFromStringUntil(aStr, '"');
-    aStr = grabFromStringUntil(aStr, '"');
-    ack(trNum, aStr);
-  }
-
-
-  DV_println(rxJson);
-
-
-
-  evManager.push(evCode, evxUdpRxMessage);
 }
+
+
 
 void evHandlerUdp::broadcastInfo(const String& aTxt) {
   //{"info":"Boot"}
@@ -220,12 +233,12 @@ void evHandlerUdp::broadcast(const String& aJsonStr) {
 }
 
 void evHandlerUdp::unicast(const IPAddress aIPAddress, const String& aJsonStr) {
-  DTV_println("Send unicast ", aJsonStr);
-  txList.add(aJsonStr);  // ajoute la trame a la liste
-                         //  messageUDP = aJsonStr;
+  DTV_println("memo unicast ", aJsonStr);
+  txList.add(aJsonStr, aIPAddress);  // ajoute la trame a la liste
+                                     //  messageUDP = aJsonStr;
 
 
-  txIPDest = aIPAddress;
+  //txIPDest = aIPAddress;
   if (!pendingUDP) {
     evManager.push(evCode, evxBcast);
     pendingUDP = true;
@@ -233,8 +246,8 @@ void evHandlerUdp::unicast(const IPAddress aIPAddress, const String& aJsonStr) {
 }
 
 // {"WiFiLuce":"{\"temperature_radiateur\":21.25}","DOMO02":"{\"ext\":21.25}"}
-void evHandlerUdp::send(const IPAddress aAddress, const udpTxTrame* aTrame) {
-  T_println("Send cast ");
+void evHandlerUdp::send(const udpTxTrame* aTrame) {
+
   String message;
   message.reserve(200);
   message = F("{\"TRAME\":");
@@ -244,8 +257,8 @@ void evHandlerUdp::send(const IPAddress aAddress, const udpTxTrame* aTrame) {
   message += "\":";
   message += aTrame->jsonStr;
   message += '}';
-
-  if (!UDP.beginPacket(aAddress, localPortNumber)) {
+  DTV_println("send unicast ", message);
+  if (!UDP.beginPacket(aTrame->destIp, localPortNumber)) {
     DT_println("Error sending UDP");
     return;
   }
@@ -257,7 +270,7 @@ void evHandlerUdp::send(const IPAddress aAddress, const udpTxTrame* aTrame) {
 void evHandlerUdp::ack(const uint8_t aNum, const String& aNodename) {
   T_println("Send ack ");
   String message;
-  message.reserve(200);
+  message.reserve(60);
   message = F("{\"ACK\":");
   message += aNum;
   message += ",\"";
@@ -265,7 +278,7 @@ void evHandlerUdp::ack(const uint8_t aNum, const String& aNodename) {
   message += "\":\"";
   message += nodename;
   message += "\"}";
-
+  //TODO  send to unicast ip if it was an unicast send ?
   if (!UDP.beginPacket(broadcastIP, localPortNumber)) {
     DT_println("Error sending UDP");
     return;
