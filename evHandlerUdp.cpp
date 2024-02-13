@@ -1,3 +1,4 @@
+#include <sys/_stdint.h>
 #include <cstdio>
 #include "evHelpers.h"
 /*************************************************
@@ -36,8 +37,8 @@
 //WiFiUDP UDP;
 
 //const uint16_t delaySilenceUdp = 300;  // delay de silence avant d'envoyer les trames
-const uint16_t delayInterUdp = 150;    // delay entre 2 trames
-const uint8_t numberOfTrame = 3;       // nombre de trame repetitives
+const uint16_t delayInterUdp = 200;  // delay entre 2 trames
+const uint8_t numberOfTrame = 4;     // nombre de trame repetitives
 
 
 void udpTxList::add(const String& aJsonStr, const IPAddress aIp) {
@@ -144,20 +145,40 @@ void evHandlerUdp::handle() {
         // filtrage des trame repetitive
 
         String bStr = grabFromStringUntil(aStr, ',');  // should be {"TRAME":xxx,
-        String cStr = grabFromStringUntil(bStr, ':');  // should be {"TRAME"
-        byte trNum = bStr.toInt();
+        String head = grabFromStringUntil(bStr, ':');  // should be {"TRAME"
+        byte trNum = bStr.toInt();                     // numero de la trame
+
         // gestion des ACK
         // TODO faire une pile de reception pour gerer les ack croisés
         //          et memorisé les modules presents
         //'{"ACK":153,"bLed256C":"BetaEvent32"}'
-        if (cStr.equals(F("{\"ACK\"")) and aStr.endsWith("}")) {  //  trame valide
+        if (head.equals(F("{\"ACK\"")) and aStr.endsWith("}")) {  //  trame valide
           DTV_println("got a ACK paquet", aStr);
           grabFromStringUntil(aStr, '"');
-          bStr = grabFromStringUntil(aStr, '"');  //
-          if (bStr.equals(nodename)) {
+          String aDest = grabFromStringUntil(aStr, "\":\"");  //recupere le nom du destinataire
+          String aFrom = grabFromStringUntil(aStr, "\"}");
+          DTV_print("ack from", aFrom);
+          DV_print(aDest);
+          static String lastDest;
+          static byte lastTrNum;
+          static byte cnt;
+          DV_println(cnt);
+          if (lastDest.equals(aDest) and (lastTrNum == trNum)) {
+            if (++cnt > 1 and ackPercent > 10) {
+              ackPercent -=(ackPercent/10);
+              DV_println(ackPercent);
+            }
+          } else {
+            lastDest = aDest;
+            lastTrNum = trNum;
+            cnt = 1;
+          }
+
+          if (aDest.equals(nodename)) {
             udpTxTrame* aTrame = txList._first;
             if (aTrame) {
               DT_println("ACK for me");
+
               if (trNum == aTrame->numTrameUDP) {
 
 
@@ -167,15 +188,11 @@ void evHandlerUdp::handle() {
               }
             }
             DT_println("already ACK");
-            if (ackPercent > 10) {
-              ackPercent--;
-              DV_println(ackPercent);
-            }
           }
           break;
         }
-        if (not(cStr.equals(F("{\"TRAME\"")) and aStr.endsWith("}}"))) {  //
-          DTV_print("Bad paquet", cStr);
+        if (not(head.equals(F("{\"TRAME\"")) and aStr.endsWith("}}"))) {  //
+          DTV_print("Bad paquet", head);
           DV_println(aStr);
           break;
         }
@@ -187,7 +204,7 @@ void evHandlerUdp::handle() {
         //C'est un doublon USP
         if (aUdpId == lastUdpId) {
           T_println("Doublon UDP");
-          if (ackPercent<100) {
+          if (ackPercent < 100) {
             ackPercent++;
             DV_println(ackPercent);
           }
