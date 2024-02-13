@@ -62,7 +62,7 @@
 #error "ESP8266  uniquement"
 #endif
 
-
+#include <Arduino_JSON.h>
 
 #define DEFAULT_PIN
 #define DEBUG_ON
@@ -248,21 +248,26 @@ void loop() {
     case evUdp:
       if (Events.ext == evxUdpRxMessage) {
         DTV_println("got an Event UDP", myUdp.rxJson);
-        String aStr = grabFromStringUntil(myUdp.rxJson, F("{\"CMD\":{\""));
-        if (myUdp.rxJson.length() == 0) {
-          DTV_println("Not a CMD", aStr);
-          break;
-        }
 
-        aStr = grabFromStringUntil(myUdp.rxJson, '"');
-        if (not aStr.equals(nodeName)) {
-          DTV_println("CMD not ", aStr);
-          break;
+        JSONVar rxJson = JSON.parse(myUdp.rxJson);
+        String from = rxJson.keys()[0];
+
+
+        //CMD
+        JSONVar rxJson2 = rxJson[from]["CMD"];
+        if (JSON.typeof(rxJson2).equals("object")) {
+          String dest = rxJson2.keys()[0];
+          // Les CMD acceptée doivent etre adressé a ce module
+          if (dest.equals("ALL") or (dest.length() > 3 and nodeName.startsWith(dest))) {
+            String aCmd = rxJson2[dest];
+            aCmd.trim();
+            DV_println(aCmd);
+            if (aCmd.startsWith(F("NODE=")) and !nodeName.equals(dest)) break;  // NODE= not allowed on aliases
+            if (aCmd.length()) Keyboard.setInputString(aCmd);
+          } else {
+            DTV_println("CMD not for me.", dest);
+          }
         }
-        grabFromStringUntil(myUdp.rxJson, '"');
-        aStr = grabFromStringUntil(myUdp.rxJson, '"');
-        aStr.trim();
-        if (aStr.length()) Keyboard.setInputString(aStr);
       }
       break;
 
@@ -384,6 +389,15 @@ void loop() {
       if (Keyboard.inputString.equals(F("RESET"))) {
         Serial.println(F("RESET"));
         Events.push(doReset);
+      }
+      if (Keyboard.inputString.equals(F("INFO"))) {
+        String aStr = F(" CPU=");
+        aStr += String(Events._percentCPU);
+        aStr += F(" ack=");
+        aStr += String(myUdp.ackPercent);
+        aStr += F("%");
+        myUdp.broadcastInfo(aStr);
+        DV_print(aStr)
       }
 
       break;

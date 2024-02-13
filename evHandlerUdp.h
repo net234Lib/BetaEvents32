@@ -57,7 +57,7 @@
 typedef enum {
   // evenement recu
   evxUdpRxMessage,  // broadcast recu
-  evxRxUdp,            // udp Rx recu
+  evxRxUdp,         // udp Rx recu
   // evenements interne de gestion
   evxBcast,  // send broadcast
   //evxNoPending,            // clear pending UDP
@@ -73,7 +73,7 @@ public:
     : castCnt(0){};
   udpTxTrame(const String& aJsonStr, const uint8_t castCnt, const uint8_t numTrameUDP, const IPAddress destIp)
     : destIp(destIp), castCnt(castCnt), numTrameUDP(numTrameUDP), jsonStr(aJsonStr){};
-  IPAddress destIp;        // ip de la destination de la trame
+  IPAddress destIp;     // ip de la destination de la trame
   uint8_t castCnt;      // compteur d'unicast a l'emission
   uint8_t numTrameUDP;  // numero de cette trame
   String jsonStr;
@@ -82,8 +82,8 @@ public:
 class udpTxList : public BList<udpTxTrame> {
 public:
   udpTxList(){};
-  void add(const String& aJsonStr,const IPAddress aIp);  //ajout d'une trame dans la liste
-  uint8_t cntTrameUDP = 0;           // compteur de trame UDP (de 1 a 199)
+  void add(const String& aJsonStr, const IPAddress aIp);  //ajout d'une trame dans la liste
+  uint8_t cntTrameUDP = 0;                                // compteur de trame UDP (de 1 a 199)
 };
 
 
@@ -110,6 +110,7 @@ public:
   void broadcast(const String& aJsonStr);                            // std broadcst
   void broadcastInfo(const String& aText);                           // broadcast just a text
   void unicast(const IPAddress aIPAddress, const String& aJsonStr);  // cast to a specific adress
+  uint16_t ackPercent = 100;                                         // pourcentage de reponce ACK a faire
 
 private:
 
@@ -122,8 +123,8 @@ private:
   udpTxList txList;          // Liste des message en attente
   udpNodeList nodeList;      // liste de mes voisins de reseau
   bool pendingUDP = false;   // indique qu'un event evCode,evxBcast est en attente
-  uint16_t ackPercent = 100;  // pourcentage de reponce ACK a faire
-  uint16_t ackCnt;            // nombre de ack recu pour ma trame en cour
+
+  uint16_t ackCnt;  // nombre de ack recu pour ma trame en cour
 
   //String messageUDP;  // message UDP en cours d'emission
 

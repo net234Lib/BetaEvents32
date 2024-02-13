@@ -165,7 +165,7 @@ void evHandlerUdp::handle() {
           DV_println(cnt);
           if (lastDest.equals(aDest) and (lastTrNum == trNum)) {
             if (++cnt > 1 and ackPercent > 10) {
-              ackPercent -=(ackPercent/10);
+              ackPercent -= (ackPercent / 10);
               DV_println(ackPercent);
             }
           } else {
@@ -175,19 +175,12 @@ void evHandlerUdp::handle() {
           }
 
           if (aDest.equals(nodename)) {
+            DT_println("ACK for me");
             udpTxTrame* aTrame = txList._first;
-            if (aTrame) {
-              DT_println("ACK for me");
-
-              if (trNum == aTrame->numTrameUDP) {
-
-
-                if (txList._remove(aTrame)) delete aTrame;
-                DT_println("Remove first trame");
-                break;
-              }
+            if (aTrame and (trNum == aTrame->numTrameUDP) and (txList._remove(aTrame))) {
+              delete aTrame;
+              DT_println("first trame removed");
             }
-            DT_println("already ACK");
           }
           break;
         }
@@ -201,17 +194,8 @@ void evHandlerUdp::handle() {
         IPAddress aUdpId = rxIPSender;
         aUdpId[0] = trNum;
 
-        //C'est un doublon USP
-        if (aUdpId == lastUdpId) {
-          T_println("Doublon UDP");
-          if (ackPercent < 100) {
-            ackPercent++;
-            DV_println(ackPercent);
-          }
-          break;
-        }
-        //Todo : filtrer les 5 dernier UdpID ?
-        lastUdpId = aUdpId;
+
+       
 
         // c'est une nouvelle trame
         bcast = (UDP.destinationIP() == broadcastIP);
@@ -225,8 +209,18 @@ void evHandlerUdp::handle() {
           aStr = grabFromStringUntil(aStr, '"');
           ack(trNum, aStr);
         }
-
-        DV_println(rxJson);
+        //C'est un doublon USP
+        if (aUdpId == lastUdpId) {
+          T_println("Doublon UDP");
+          if (ackPercent < 100) {
+            ackPercent++;
+            DV_println(ackPercent);
+          }
+          break;
+        }
+         //Todo : filtrer les 5 dernier UdpID ?
+        lastUdpId = aUdpId;
+        DTV_println("valide UDP",rxJson);
         evManager.push(evCode, evxUdpRxMessage);
         break;
       }
