@@ -61,6 +61,8 @@
 #endif
 
 
+void displaySizeofItems();
+
 class EventManager;
 
 #ifndef _Time_h
@@ -156,7 +158,9 @@ public:
   bool push(const uint8_t code, const int16_t param1, const int16_t param2);
   //   bool   pushFloat(const uint8_t code, const float   afloat);
   bool delayedPushMilli(const uint32_t delayMillisec, const uint8_t code);
+   bool repeatedPushMilli(const uint32_t delayMillisec, const uint8_t code);
   bool delayedPushMilli(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2 = 0);
+  bool repeatedPushMilli(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2 , const bool repeat= false);
   //bool forceDelayedPushMilli(const uint32_t delayMillisec, const uint8_t code);
   bool forceDelayedPushMilli(const uint32_t delayMillisec, const uint8_t code, const int16_t param1 = 0, const int16_t param2 = 0);
   //    int    syncroSeconde(const int millisec = 0);
@@ -197,6 +201,8 @@ private:
   eventHandler_t* handleEventList = nullptr;
   //eventHandler_t*   getEventList = nullptr;
 };
+
+
 
 extern EventManager Events;
 

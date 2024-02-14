@@ -88,11 +88,11 @@ enum tUserEventCode {
 EventManager Events = EventManager();
 
 // instance clavier
-evHandlerSerial Keyboard(115200, 100);
+evHandlerSerial Keyboard; //(115200, 100);
 
-#ifdef DEBUG_ON
+#ifndef NO_DEBUGGER
 // instance debugger
-evHandlerDebug Debug();
+evHandlerDebug Debug; //
 #endif
 
 

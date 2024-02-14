@@ -52,7 +52,7 @@
     
     *************************************************/
 
-#define APP_NAME "betaEvents V3.0.B3"
+#define APP_NAME "betaEvents V3.0.B4"
 
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
@@ -65,7 +65,10 @@
 #include <Arduino_JSON.h>
 
 #define DEFAULT_PIN
-#define DEBUG_ON
+//par defaut le debug
+//#define NO_DEBUG   // this keyword remove all Dxx_print  from code
+//#define NO_DEBUGGER // this remove debug instance
+
 #include "EventsManager32.h"
 EventManager Events = EventManager();
 // instance Serial
@@ -92,6 +95,8 @@ enum tUserEventCode {
   ev1S = 151,
   ev2S,
   ev3S,
+  evR1,
+  evR2,
   evUdp,
   // evenement action
   doReset,
@@ -148,6 +153,7 @@ void setup() {
   Led1.setMillisec(2000, 10);
   Serial.println("Bonjour ....");
   DV_println(sizeof(stdEvent_t));
+  displaySizeofItems();
   DV_println(sizeof(size_t));
   DV_println(sizeof(int));
   DV_println(sizeof(long));
@@ -290,6 +296,24 @@ void loop() {
       V_println(Events.intExt2);
       break;
 
+    case evR1:
+      {
+        Events.delayedPushMilli(1000, evR1);
+        static long start = millis();
+        static long cnt = 0;
+        TV_println("evR1 err=", (millis()-start)-cnt++*1000);
+      }
+      break;
+
+    case evR2:
+      {
+        static long start = millis();
+        static long cnt = 0;
+        TV_println("evR2   err=", (millis()-start)-cnt++*1000);
+      }
+      break;
+
+
     case doReset:
       Events.reset();
       break;
@@ -332,7 +356,7 @@ void loop() {
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
       }
-      if (Keyboard.inputString.equals(F("P"))) {
+      if (Keyboard.inputString.equals(F("P1"))) {
         Serial.println(F("Push 3 delay events"));
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
@@ -343,7 +367,7 @@ void loop() {
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
       }
-      if (Keyboard.inputString.equals(F("Q"))) {
+      if (Keyboard.inputString.equals(F("P2"))) {
         Serial.println(F("Push 3 events"));
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
@@ -353,12 +377,28 @@ void loop() {
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
       }
-      if (Keyboard.inputString.equals(F("R"))) {
+      if (Keyboard.inputString.equals(F("BCAST"))) {
         Serial.println(F("bCast 3 messages"));
         myUdp.broadcastInfo(F("message1"));
         myUdp.broadcastInfo(F("message2"));
         myUdp.broadcastInfo(F("message3"));
       }
+
+      if (Keyboard.inputString.equals(F("R0"))) {
+        Serial.println(F("remove repeat 1s"));
+        Events.removeDelayEvent(evR1);
+        Events.removeDelayEvent(evR2);
+      }
+
+
+
+      if (Keyboard.inputString.equals(F("R1"))) {
+        Serial.println(F("repeat 1s classique "));
+        Events.delayedPushMilli(1000, evR1);
+        Events.repeatedPushMilli(1000, evR2);
+      }
+
+
 
       if (Keyboard.inputString.startsWith(F("WIFI="))) {
         Serial.println(F("SETUP WIFI : 'WIFI= WifiName, password"));

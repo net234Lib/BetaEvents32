@@ -60,25 +60,33 @@ struct eventItem_t : public stdEvent_t {
 };
 
 struct delayEventItem_t : public stdEvent_t {
+  delayEventItem_t()
+    : stdEvent_t(), nextItemPtr(nullptr), delay(0), refDelay(0) {}
   delayEventItem_t(const uint16_t aDelay, const uint8_t code, const int ext = 0)
-    : stdEvent_t(code, ext), delay(aDelay), nextItemPtr(nullptr) {}
-  delayEventItem_t(const uint16_t aDelay, const uint8_t code, const int16_t int1, const int16_t int2)
-    : stdEvent_t(code, int1, int2), delay(aDelay), nextItemPtr(nullptr) {}
+    : stdEvent_t(code, ext), nextItemPtr(nullptr), delay(aDelay), refDelay(0) {}
+  delayEventItem_t(const uint16_t aDelay, const uint8_t code, const int16_t int1, const int16_t int2, const bool repeat = false)
+    : stdEvent_t(code, int1, int2), nextItemPtr(nullptr), delay(aDelay) {
+    refDelay = (repeat) ? aDelay : 0;
+  }
   delayEventItem_t(const delayEventItem_t& stdEvent)
-    : stdEvent_t(stdEvent), delay(stdEvent.delay), nextItemPtr(nullptr) {}
-  uint16_t delay;  // delay millis  thenth;
+    : stdEvent_t(stdEvent), nextItemPtr(nullptr), delay(stdEvent.delay), refDelay(stdEvent.refDelay) {}
   delayEventItem_t* nextItemPtr;
+  uint16_t delay;  // delay millis   64 sec    thenth  1,7H;
+  uint16_t refDelay;
 };
 
 struct longDelayEventItem_t : public stdEvent_t {
   longDelayEventItem_t(const uint32_t aDelay, const uint8_t code, const int ext = 0)
-    : stdEvent_t(code, ext), longDelay(aDelay), nextLongItemPtr(nullptr) {}
-  longDelayEventItem_t(const uint16_t aDelay, const uint8_t code, const int16_t int1, const int16_t int2)
-    : stdEvent_t(code, int1, int2), longDelay(aDelay), nextLongItemPtr(nullptr) {}
+    : stdEvent_t(code, ext), nextLongItemPtr(nullptr), longDelay(aDelay), longRefDelay(0) {}
+  longDelayEventItem_t(const uint16_t aDelay, const uint8_t code, const int16_t int1, const int16_t int2, const bool repeat = false)
+    : stdEvent_t(code, int1, int2), nextLongItemPtr(nullptr), longDelay(aDelay) {
+    longRefDelay = (repeat) ? aDelay : 0;
+  }
   longDelayEventItem_t(const longDelayEventItem_t& stdEvent)
-    : stdEvent_t(stdEvent), longDelay(stdEvent.longDelay), nextLongItemPtr(nullptr) {}
-  uint32_t longDelay;  // delay seconds; up to 150 years :)
+    : stdEvent_t(stdEvent), nextLongItemPtr(nullptr), longDelay(stdEvent.longDelay), longRefDelay(stdEvent.longRefDelay) {}
   longDelayEventItem_t* nextLongItemPtr;
+  uint32_t longDelay;  // delay seconds; up to 150 years :)
+  uint32_t longRefDelay;
 };
 
 
@@ -257,9 +265,14 @@ void EventManager::parseDelayList(delayEventItem_t** ItemPtr, const uint16_t del
       //Serial.print("done waitingdelay : ");
       //D_println((*ItemPtr)->code);
       delayEventItem_t* aDelayItemPtr = *ItemPtr;
-      *ItemPtr = (*ItemPtr)->nextItemPtr;
       push(*aDelayItemPtr);
-      delete aDelayItemPtr;
+      //DV_println((*ItemPtr)->refDelay);
+      if ( (*ItemPtr)->refDelay == 0) {  //true or
+        *ItemPtr = (*ItemPtr)->nextItemPtr;
+        delete aDelayItemPtr;
+      } else {
+        (*ItemPtr)->delay += (*ItemPtr)->refDelay;
+      }
     }
   }
 }
@@ -418,6 +431,24 @@ bool EventManager::delayedPushMilli(const uint32_t delayMillisec, const uint8_t 
   return (forceDelayedPushMilli(delayMillisec, code));
 }
 
+bool EventManager::repeatedPushMilli(const uint32_t delayMillisec, const uint8_t code) {
+  while (removeDelayEvent(code)) {};
+  if (delayMillisec < 10) return (false);
+  if (delayMillisec < 1000UL) {  // moins de 1 secondes
+    addDelayEvent(&(eventMillisList), new delayEventItem_t(delayMillisec, code, 0, 0, true));
+    return (true);
+  }
+  if (delayMillisec < 600UL * 1000UL) {  // moins de 10 minute
+    addDelayEvent(&(eventTenthList), new delayEventItem_t(delayMillisec / 100, code, 0, 0, true));
+    return (true);
+  }
+  addLongDelayEvent(&(eventSecondsList), new longDelayEventItem_t(delayMillisec / 1000, code, 0, 0, true));
+
+  return (true);
+};
+
+
+
 bool EventManager::removeDelayEventFromList(const byte codeevent, delayEventItem_t** nextItemPtr) {
   while (*nextItemPtr) {
     if ((*nextItemPtr)->code == codeevent) {
@@ -476,7 +507,10 @@ void EventManager::reset() {
   }
 }
 
-
+void displaySizeofItems() {
+  DV_println(sizeof(delayEventItem_t));
+  DV_println(sizeof(longDelayEventItem_t));
+};
 
 #ifndef _Time_h
 byte second() {

@@ -47,11 +47,10 @@
      *************************************************/
 #pragma once
 #include <Arduino.h>
-#define DEBUG_ON
+//#define NO_DEBUG
 #include "EventsManager32.h"
 #include <WiFiUdp.h>
 //#include <IPAddress.h>
-
 
 
 typedef enum {

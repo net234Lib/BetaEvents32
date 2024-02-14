@@ -36,6 +36,8 @@
 
 //WiFiUDP UDP;
 
+
+
 //const uint16_t delaySilenceUdp = 300;  // delay de silence avant d'envoyer les trames
 const uint16_t delayInterUdp = 200;  // delay entre 2 trames
 const uint8_t numberOfTrame = 4;     // nombre de trame repetitives
@@ -195,7 +197,7 @@ void evHandlerUdp::handle() {
         aUdpId[0] = trNum;
 
 
-       
+
 
         // c'est une nouvelle trame
         bcast = (UDP.destinationIP() == broadcastIP);
@@ -218,9 +220,9 @@ void evHandlerUdp::handle() {
           }
           break;
         }
-         //Todo : filtrer les 5 dernier UdpID ?
+        //Todo : filtrer les 5 dernier UdpID ?
         lastUdpId = aUdpId;
-        DTV_println("valide UDP",rxJson);
+        DTV_println("valide UDP", rxJson);
         evManager.push(evCode, evxUdpRxMessage);
         break;
       }
@@ -298,5 +300,8 @@ void evHandlerUdp::ack(const uint8_t aNum, const String& aNodename) {
   UDP.write(message.c_str(), message.length());
   UDP.endPacket();
 }
+
+
+
 
 #endif
