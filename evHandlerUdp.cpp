@@ -1,6 +1,4 @@
-#include <sys/_stdint.h>
-#include <cstdio>
-#include "evHelpers.h"
+
 /*************************************************
  *************************************************
     handler evUdp.h   validation of lib betaEvents to deal nicely with events programing with Arduino
@@ -32,9 +30,7 @@
 #if defined(ESP8266) || defined(ESP32)
 
 #include "evHandlerUdp.h"
-//#include <WiFiUdp.h>
-
-//WiFiUDP UDP;
+//#include "evHelpers.h"
 
 
 

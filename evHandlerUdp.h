@@ -47,7 +47,7 @@
      *************************************************/
 #pragma once
 #include <Arduino.h>
-//#define NO_DEBUG
+#define NO_DEBUG
 #include "EventsManager32.h"
 #include <WiFiUdp.h>
 //#include <IPAddress.h>
