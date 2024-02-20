@@ -140,21 +140,16 @@ void evHandlerUdp::handle() {
 
         String aStr = udpPacketBuffer;
 
-        // filtrage des trame repetitive
-
-        String bStr = grabFromStringUntil(aStr, ',');  // should be {"TRAME":xxx,
-        String head = grabFromStringUntil(bStr, ':');  // should be {"TRAME"
-        byte trNum = bStr.toInt();                     // numero de la trame
-
-        // gestion des ACK
+        // gestion des ACK  V2
         // TODO faire une pile de reception pour gerer les ack croisés
         //          et memorisé les modules presents
-        //'{"ACK":153,"bLed256C":"BetaEvent32"}'
-        if (head.equals(F("{\"ACK\"")) and aStr.endsWith("}")) {  //  trame valide
-          DTV_println("got a ACK paquet", aStr);
-          grabFromStringUntil(aStr, '"');
-          String aDest = grabFromStringUntil(aStr, "\":\"");  //recupere le nom du destinataire
-          String aFrom = grabFromStringUntil(aStr, "\"}");
+        // # ACK<ntrame>\t<to>\t<from>
+        if (aStr.startsWith("ACK")) {
+          DTV_println("got a ACK V2", aStr);
+          astr.remove(0, 3);
+          uint trNum = grabFromStringUntil(aStr, '\t').toInt();
+          String aDest = grabFromStringUntil(aStr, '\t');
+          String afrom = aStr;
           DTV_print("ack from", aFrom);
           DV_print(aDest);
           static String lastDest;
@@ -182,20 +177,72 @@ void evHandlerUdp::handle() {
           }
           break;
         }
-        if (not(head.equals(F("{\"TRAME\"")) and aStr.endsWith("}}"))) {  //
-          DTV_print("Bad paquet", head);
-          DV_println(aStr);
+
+        /*
+        // filtrage des trame repetitive
+
+        String bStr = grabFromStringUntil(aStr, ',');  // should be {"TRAME":xxx,
+        String head = grabFromStringUntil(bStr, ':');  // should be {"TRAME"
+        byte trNum = bStr.toInt();                     // numero de la trame
+
+        // gestion des ACK
+        // TODO faire une pile de reception pour gerer les ack croisés
+        //          et memorisé les modules presents
+        //'{"ACK":153,"bLed256C":"BetaEvent32"}'
+        if (head.equals(F("{\"ACK\"")) and aStr.endsWith("}")) {  //  ack V2 valide
+          DTV_println("got a ACK V1paquet", aStr);
+          grabFromStringUntil(aStr, '"');
+          String aDest = grabFromStringUntil(aStr, "\":\"");  //recupere le nom du destinataire
+          String aFrom = grabFromStringUntil(aStr, "\"}");
+          DTV_print("ack from", aFrom);
+          DV_print(aDest);
+
+          static String lastDest;
+          static byte lastTrNum;
+          static byte cnt;
+          DV_println(cnt);
+          if (lastDest.equals(aDest) and (lastTrNum == trNum)) {
+            if (++cnt > 1 and ackPercent > 10) {
+              ackPercent -= (ackPercent / 10);
+              DV_println(ackPercent);
+            }
+          } else {
+            lastDest = aDest;
+            lastTrNum = trNum;
+            cnt = 1;
+          }
+
+          if (aDest.equals(nodename)) {
+            DT_println("ACK for me");
+            udpTxTrame* aTrame = txList._first;
+            if (aTrame and (trNum == aTrame->numTrameUDP) and (txList._remove(aTrame))) {
+              delete aTrame;
+              DT_println("first trame removed");
+            }
+          }
           break;
         }
+  */
+        if (not(aStr.equals(F("BETA")) and aStr.endsWith('}'))) {  //
+          DTV_print("Bad paquet", aStr);
+          break;
+        }
+
+        DTV_println("got a trame V3", aStr);
+        astr.remove(0, 4);
+        uint trNum = grabFromStringUntil(aStr, '\t').toInt();
+        String aFrom = grabFromStringUntil(aStr, '\t');
+        rxJson = aStr;
+        DTV_print("ack from", aFrom);
+        DV_println(aJson);
+
         // UdpId is a mix of remote IP and EVENT number
         rxIPSender = UDP.remoteIP();
         IPAddress aUdpId = rxIPSender;
         aUdpId[0] = trNum;
 
 
-
-
-        // c'est une nouvelle trame
+       // c'est une nouvelle trame
         bcast = (UDP.destinationIP() == broadcastIP);
 
         rxJson = '{';
@@ -207,7 +254,7 @@ void evHandlerUdp::handle() {
           aStr = grabFromStringUntil(aStr, '"');
           ack(trNum, aStr);
         }
-        //C'est un doublon USP
+        //C'est un doublon UDP
         if (aUdpId == lastUdpId) {
           DT_println("Doublon UDP");
           if (ackPercent < 100) {
@@ -236,7 +283,7 @@ void evHandlerUdp::broadcastInfo(const String& aTxt) {
   broadcast(aJsonStr);
 }
 
-void evHandlerUdp::broadcastEvent(const String&  aEvent) {
+void evHandlerUdp::broadcastEvent(const String& aEvent) {
   //{"info":"Boot"}
   String aJsonStr = F("{\"Event\":\"");
   aJsonStr += aEvent;
