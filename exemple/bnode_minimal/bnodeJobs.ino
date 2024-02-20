@@ -53,38 +53,6 @@ void writeHisto(const String& aAction, const String& aInfo) {
 
 
 /*
-String niceDisplayTime(const time_t time, bool full) {
-
-  String txt;
-  // we supose that time < NOT_A_DATE_YEAR is not a date
-  if ( year(time) < NOT_A_DATE_YEAR ) {
-    txt = "          ";
-    txt += time / (24 * 3600);
-    txt += ' ';
-    txt = txt.substring(txt.length() - 10);
-  } else {
-
-    txt = Digit2_str(day(time));
-    txt += '/';
-    txt += Digit2_str(month(time));
-    txt += '/';
-    txt += year(time);
-  }
-
-  static String date;
-  if (!full && txt == date) {
-    txt = "";
-  } else {
-    date = txt;
-    txt += " ";
-  }
-  txt += Digit2_str(hour(time));
-  txt += ':';
-  txt += Digit2_str(minute(time));
-  txt += ':';
-  txt += Digit2_str(second(time));
-  return txt;
-}
 
 
 
@@ -625,3 +593,5 @@ void jobUpdateLed0() {
   Led0.setMillisec(1000, cpu);
   //ledLifeColor = rvb_red;
 }
+
+

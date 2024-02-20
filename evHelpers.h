@@ -2,15 +2,8 @@
 // generic helpers out of evManager library
 #pragma once
 #include <arduino.h>
-
-/*
-#ifndef time_t
-#if  defined(__AVR__)
-
-#define time_t unsigned long
-#endif
-#endif
-*/
+#define NOT_A_DATE_YEAR 2000
+#include <TimeLib.h>
 
 #ifndef NO_DEBUG
 
@@ -50,6 +43,7 @@
 
 
 String niceDisplayDelay(time_t aDelay);
+String niceDisplayTime(const time_t time, bool full);
 String Digit2_str(const uint16_t value);
 void   helperReset();
 //int    helperFreeRam();

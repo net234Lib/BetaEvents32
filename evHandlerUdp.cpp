@@ -146,10 +146,10 @@ void evHandlerUdp::handle() {
         // # ACK<ntrame>\t<to>\t<from>
         if (aStr.startsWith("ACK")) {
           DTV_println("got a ACK V2", aStr);
-          astr.remove(0, 3);
+          aStr.remove(0, 3);
           uint trNum = grabFromStringUntil(aStr, '\t').toInt();
           String aDest = grabFromStringUntil(aStr, '\t');
-          String afrom = aStr;
+          String aFrom = aStr;
           DTV_print("ack from", aFrom);
           DV_print(aDest);
           static String lastDest;
@@ -223,18 +223,18 @@ void evHandlerUdp::handle() {
           break;
         }
   */
-        if (not(aStr.equals(F("BETA")) and aStr.endsWith('}'))) {  //
+        if ( not(aStr.startsWith("BETA") and aStr.endsWith("}")) ) {  //
           DTV_print("Bad paquet", aStr);
           break;
         }
 
         DTV_println("got a trame V3", aStr);
-        astr.remove(0, 4);
+        aStr.remove(0, 4);
         uint trNum = grabFromStringUntil(aStr, '\t').toInt();
-        String aFrom = grabFromStringUntil(aStr, '\t');
+        rxFrom = grabFromStringUntil(aStr, '\t');
         rxJson = aStr;
-        DTV_print("ack from", aFrom);
-        DV_println(aJson);
+        DTV_print("trame from", rxFrom);
+        DV_println(rxJson);
 
         // UdpId is a mix of remote IP and EVENT number
         rxIPSender = UDP.remoteIP();
@@ -244,15 +244,8 @@ void evHandlerUdp::handle() {
 
        // c'est une nouvelle trame
         bcast = (UDP.destinationIP() == broadcastIP);
-
-        rxJson = '{';
-        rxJson += aStr;
-        // D_print(rxHeader);
-        // D_print(rxNode);
         if (bcast and (random(100) < ackPercent)) {
-          grabFromStringUntil(aStr, '"');
-          aStr = grabFromStringUntil(aStr, '"');
-          ack(trNum, aStr);
+          ack(trNum, rxFrom);
         }
         //C'est un doublon UDP
         if (aUdpId == lastUdpId) {
@@ -314,13 +307,12 @@ void evHandlerUdp::send(const udpTxTrame* aTrame) {
 
   String message;
   message.reserve(200);
-  message = F("{\"TRAME\":");
+  message = F("BETA");
   message += aTrame->numTrameUDP;
-  message += ",\"";
+  message += '\t';
   message += nodename;
-  message += "\":";
+  message += '\t';
   message += aTrame->jsonStr;
-  message += '}';
   DTV_println("send unicast ", message);
   if (!UDP.beginPacket(aTrame->destIp, localPortNumber)) {
     DT_println("Error sending UDP");
@@ -335,13 +327,12 @@ void evHandlerUdp::ack(const uint8_t aNum, const String& aNodename) {
   DT_println("Send ack ");
   String message;
   message.reserve(60);
-  message = F("{\"ACK\":");
+  message = F("ACK");
   message += aNum;
-  message += ",\"";
+  message += '\t';
   message += aNodename;
-  message += "\":\"";
+  message += '\t';
   message += nodename;
-  message += "\"}";
   //TODO  send to unicast ip if it was an unicast send ?
   if (!UDP.beginPacket(broadcastIP, localPortNumber)) {
     DT_println("Error sending UDP");

@@ -71,8 +71,6 @@ struct {
   evInString,
 */
 
-const int delayTimeMaster = 60 * 1000;  // par defaut toute les minutes   TODO:  publier cette valeur dans le groupe ?
-bool isTimeMaster = false;
 // Liste des evenements specifique a ce projet
 enum tUserEventCode {
   // evenement recu
@@ -131,6 +129,8 @@ int multi = 0;         // nombre de clic rapide
 bool configOk = true;  // global used by getConfig...
 const byte postInitDelay = 15;
 bool postInit = false;  // true postInitDelay secondes apres le boot (limitation des messages Slack)
+const int delayTimeMaster = 60 * 1000;  // par defaut toute les minutes   TODO:  publier cette valeur dans le groupe ?
+bool isTimeMaster = false;
 
 
 
@@ -277,6 +277,7 @@ void loop() {
       // si un master est preset il envoi un evgrabMaster toute les minutes
       // dans ce cas je reporte mon ev grabmaster et je perd mon status master
     case evTimeMasterSyncr:
+      T_println(evTimeMasterSyncr);
       isTimeMaster = false;
       Events.delayedPushMilli(delayTimeMaster + (WiFi.localIP()[3] * 100), evTimeMasterGrab);
       //LedLife[1].setcolor((isMaster) ? rvb_blue : rvb_green, 30, 0, delayTimeMaster);
@@ -284,6 +285,7 @@ void loop() {
       break;
     //deviens master en cas d'absence du master local
     case evTimeMasterGrab:
+      T_println(evTimeMasterGrab);
       {
         String aStr = F("{\"event\":\"evMasterSyncr\"}");
         myUdp.broadcastEvent(F("evTimeMasterSyncr"));
@@ -317,24 +319,75 @@ void loop() {
 
     case evUdp:
       if (Events.ext == evxUdpRxMessage) {
+        DTV_print("from",myUdp.rxFrom);
         DTV_println("got an Event UDP", myUdp.rxJson);
-        String aStr = grabFromStringUntil(myUdp.rxJson, F("{\"CMD\":{\""));
-        if (myUdp.rxJson.length() == 0) {
-          DTV_println("Not a CMD", aStr);
+        JSONVar rxJson = JSON.parse(myUdp.rxJson);
+
+        // event
+        // les events sont uniquement acceptés si le from est un membre du pannel
+        JSONVar rxJson2 = rxJson["Event"];
+        if (JSON.typeof(rxJson2).equals("string")) {
+          String aStr = rxJson2;
+          DTV_println("external event", aStr);
+          if (aStr.equals(F("evTimeMasterSyncr"))) {
+            Events.delayedPushMilli(0, evTimeMasterSyncr);
+            break;
+          }
+
+          // autre event
+          ///and (from.length() > 3 and from.startsWith(pannelName))
+        }
+
+
+
+        //CMD
+        //./bNodeCmd.pl bNode FREE -n
+        //bNodeCmd.pl  V1.4
+        //broadcast:BETA82	net234	{"CMD":{"bNode":"FREE"}}
+        rxJson2 = rxJson["CMD"];
+        if (JSON.typeof(rxJson2).equals("object")) {
+          String dest = rxJson2.keys()[0];  //<nodename called>
+          // Les CMD acceptée doivent etre adressé a ce module
+          if (dest.equals("ALL") or (dest.length() > 3 and nodeName.startsWith(dest))) {
+            String aCmd = rxJson2[dest];
+            aCmd.trim();
+            DV_println(aCmd);
+            if (aCmd.startsWith("NODE=") and !nodeName.equals(dest)) break;  // NODE= not allowed on aliases
+            if (aCmd.length()) Keyboard.setInputString(aCmd);
+          } else {
+            DTV_println("CMD not for me.", dest);
+          }
           break;
         }
 
-        aStr = grabFromStringUntil(myUdp.rxJson, '"');
-        if (not aStr.equals(nodeName)) {
-          DTV_println("CMD not for me", aStr);
-          break;
+        //TIME  TODO: a finir time
+        rxJson2 = rxJson["TIME"];
+        if (JSON.typeof(rxJson2).equals("object")) {
+          int aTimeZone = (int)rxJson2["timezone"];
+          DV_println(aTimeZone);
+          if (aTimeZone != timeZone) {
+            //             writeHisto( F("Old TimeZone"), String(timeZone) );
+            timeZone = aTimeZone;
+            jobSetConfigInt("timezone", timeZone);
+          }
+          time_t aTime = (unsigned long)rxJson2["timestamp"] - (timeZone * 3600);
+          DV_println(niceDisplayTime(currentTime, true));
+          DV_println(niceDisplayTime(aTime, true));
+          int delta = aTime - currentTime;
+          DV_println(delta);
+          if (abs(delta) < 5000) {
+            adjustTime(delta);
+            currentTime = now();
+          } else {
+            currentTime = aTime;
+            setTime(currentTime);
+          }
+          DV_println(currentTime);
+
+          DV_println(niceDisplayTime(currentTime, true));
         }
-        grabFromStringUntil(myUdp.rxJson, '"');
-        aStr = grabFromStringUntil(myUdp.rxJson, '"');
-        aStr.trim();
-        if (aStr.length()) Keyboard.setInputString(aStr);
       }
-      break;
+      break;  //evudp
 
     //    case doReset:
     //      Events.reset();
@@ -444,7 +497,19 @@ void loop() {
         myUdp.broadcastInfo(aStr);
       }
 
-
+if (Keyboard.inputString.equals(F("INFO"))) {
+        String aStr = F("isTimeMaster=");
+        aStr += String(isTimeMaster);
+        aStr += F(" CPU=");
+        aStr += String(Events._percentCPU);
+        aStr += F("% ack=");
+        aStr += String(myUdp.ackPercent);
+        aStr += F("%");
+        //ledLifeVisible = true;
+        //Events.delayedPushMilli(5 * 60 * 1000, evHideLedLife);
+        myUdp.broadcastInfo(aStr);
+        DV_print(aStr)
+      }
       if (Keyboard.inputString.equals("OTA")) {
         Events.push(evStartOta);
         DT_println("Start OTA");

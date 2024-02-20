@@ -56,9 +56,9 @@
 
 
 // betaEvent handle a minimal time system to get for seconds() minutes() or hours()
-#ifndef __AVR__
+
 #include <TimeLib.h>  // uncomment this if you prefer to use arduino TimeLib.h  (it will use little more ram and flash)
-#endif
+
 
 
 void displaySizeofItems();

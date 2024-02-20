@@ -47,7 +47,7 @@
      *************************************************/
 #pragma once
 #include <Arduino.h>
-//#define NO_DEBUG
+#define NO_DEBUG
 #include "EventsManager32.h"
 #include <WiFiUdp.h>
 //#include <IPAddress.h>
@@ -62,7 +62,7 @@ typedef enum {
   //evxNoPending,            // clear pending UDP
 } tUdpEventExt;
 
-const int UDP_MAX_SIZE = 250;  // we handle short messages
+const int UDP_MAX_SIZE = 400;  // we handle short messages
 #include "bListe.h"
 
 //la txliste et ses items txTrame
@@ -137,6 +137,6 @@ public:
   IPAddress rxIPSender;  // ip de la source de la trame
   bool bcast;            // true if rx is a bcast
   //String rxHeader;  // header of rxMessage
-  //String rxNode;    // nodename of rxMessage
+  String rxFrom;    // nodename of rxMessage
   String rxJson;  // json of rxMessage
 };
