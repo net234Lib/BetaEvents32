@@ -86,52 +86,7 @@ String niceDisplayTime(const time_t time, bool full) {
   return txt;
 }
 
-// helper to save and restore RTC_DATA
-// this is ugly but we need this to get correct sizeof()
-#define  RTC_DATA(x) (uint32_t*)&x,sizeof(x)
 
-bool saveRTCmemory() {
-  setCrc8(&savedRTCmemory.crc8 + 1, sizeof(savedRTCmemory) - 1, savedRTCmemory.crc8);
-  //system_rtc_mem_read(64, &savedRTCmemory, sizeof(savedRTCmemory));
-  return ESP.rtcUserMemoryWrite(0, RTC_DATA(savedRTCmemory) );
-}
-
-bool getRTCMemory() {
-  ESP.rtcUserMemoryRead(0, RTC_DATA(savedRTCmemory));
-  //Serial.print("CRC1="); Serial.println(getCrc8( (uint8_t*)&savedRTCmemory,sizeof(savedRTCmemory) ));
-  return ( setCrc8( &savedRTCmemory.crc8 + 1, sizeof(savedRTCmemory) - 1, savedRTCmemory.crc8 ) );
-}
-
-/////////////////////////////////////////////////////////////////////////
-//  crc 8 tool
-// https://www.nongnu.org/avr-libc/user-manual/group__util__crc.html
-
-
-//__attribute__((always_inline))
-inline uint8_t _crc8_ccitt_update  (uint8_t crc, const uint8_t inData)   {
-  uint8_t   i;
-  crc ^= inData;
-
-  for ( i = 0; i < 8; i++ ) {
-    if (( crc & 0x80 ) != 0 ) {
-      crc <<= 1;
-      crc ^= 0x07;
-    } else {
-      crc <<= 1;
-    }
-  }
-  return crc;
-}
-
-bool  setCrc8(const void* data, const uint16_t size, uint8_t &refCrc ) {
-  uint8_t* dataPtr = (uint8_t*)data;
-  uint8_t crc = 0xFF;
-  for (uint8_t i = 0; i < size; i++) crc = _crc8_ccitt_update(crc, *(dataPtr++));
-  //Serial.print("CRC "); Serial.print(refCrc); Serial.print(" / "); Serial.println(crc);
-  bool result = (crc == refCrc);
-  refCrc = crc;
-  return result;
-}
 
 //get a value of a config key
 String jobGetConfigStr(const String aKey) {
@@ -653,14 +608,20 @@ void jobCheckWifi() {
 // si le poussoir BP0 est enfoncé  clignotement tout les 500ms ()
 // si le wifi est OK clignotement toute les 5 secondes
 // sinon clignotemnt toute les secondes (wifi off)
+// la duree du pulse allumé correspond a l'utilisation CPU
 void jobUpdateLed0() {
+  uint cpu = 80*Events._percentCPU/100+2;
+  DV_println(cpu);
   if (BP0.isOn()) {
-    Led0.setMillisec(500, 10);
+    Led0.setMillisec(500, cpu);
+    //ledLifeColor = rvb_blue;
     return;
   }
   if (WiFiConnected) {
-    Led0.setMillisec(5000, 2);
+    Led0.setMillisec(5000, cpu);
+    //ledLifeColor = rvb_green;
     return;
   }
-  Led0.setMillisec(1000, 10);
+  Led0.setMillisec(1000, cpu);
+  //ledLifeColor = rvb_red;
 }

@@ -209,7 +209,7 @@ void evHandlerUdp::handle() {
         }
         //C'est un doublon USP
         if (aUdpId == lastUdpId) {
-          T_println("Doublon UDP");
+          DT_println("Doublon UDP");
           if (ackPercent < 100) {
             ackPercent++;
             DV_println(ackPercent);
@@ -230,8 +230,16 @@ void evHandlerUdp::handle() {
 
 void evHandlerUdp::broadcastInfo(const String& aTxt) {
   //{"info":"Boot"}
-  String aJsonStr = F("{\"info\":\"");
+  String aJsonStr = F("{\"Info\":\"");
   aJsonStr += aTxt;
+  aJsonStr += "\"}";
+  broadcast(aJsonStr);
+}
+
+void evHandlerUdp::broadcastEvent(const String&  aEvent) {
+  //{"info":"Boot"}
+  String aJsonStr = F("{\"Event\":\"");
+  aJsonStr += aEvent;
   aJsonStr += "\"}";
   broadcast(aJsonStr);
 }
@@ -277,7 +285,7 @@ void evHandlerUdp::send(const udpTxTrame* aTrame) {
 }
 
 void evHandlerUdp::ack(const uint8_t aNum, const String& aNodename) {
-  T_println("Send ack ");
+  DT_println("Send ack ");
   String message;
   message.reserve(60);
   message = F("{\"ACK\":");

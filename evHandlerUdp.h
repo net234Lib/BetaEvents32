@@ -108,6 +108,7 @@ public:
   // at this level 'cast' job just push trame in txList   trame will be send on next evXBcast
   void broadcast(const String& aJsonStr);                            // std broadcst
   void broadcastInfo(const String& aText);                           // broadcast just a text
+  void broadcastEvent(const String&  aevent);                           // broadcast just a text
   void unicast(const IPAddress aIPAddress, const String& aJsonStr);  // cast to a specific adress
   uint16_t ackPercent = 100;                                         // pourcentage de reponce ACK a faire
 

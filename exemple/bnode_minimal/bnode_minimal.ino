@@ -26,7 +26,7 @@
 
  *************************************************/
 
-#define APP_NAME "bnode_minimal V1.0"
+#define APP_NAME "bnode_minimal V1.0A"
 
 #include <ArduinoOTA.h>
 #include "EventsManager32.h"
@@ -71,6 +71,8 @@ struct {
   evInString,
 */
 
+const int delayTimeMaster = 60 * 1000;  // par defaut toute les minutes   TODO:  publier cette valeur dans le groupe ?
+bool isTimeMaster = false;
 // Liste des evenements specifique a ce projet
 enum tUserEventCode {
   // evenement recu
@@ -79,6 +81,8 @@ enum tUserEventCode {
   evUdp,
   evStartOta,
   evStopOta,
+  evTimeMasterGrab,   //Annonce le placement en MasterTime
+  evTimeMasterSyncr,  //Signale au bNodes periodiquement mon status de TimeMaster
   evReset,
 
 };
@@ -88,11 +92,11 @@ enum tUserEventCode {
 EventManager Events = EventManager();
 
 // instance clavier
-evHandlerSerial Keyboard; //(115200, 100);
+evHandlerSerial Keyboard;  //(115200, 100);
 
 #ifndef NO_DEBUGGER
 // instance debugger
-evHandlerDebug Debug; //
+evHandlerDebug Debug;  //
 #endif
 
 
@@ -185,6 +189,13 @@ void setup() {
     Serial.println(F("!!! timezone !!!"));
   }
   DV_println(timeZone);
+  Serial.println("Wait a for wifi");
+  for (int N = 0; N < 50; N++) {
+    if (WiFi.status() == WL_CONNECTED) break;
+    delay(100);
+  }
+
+  ArduinoOTA.setHostname(nodeName.c_str());
 
   // lisen UDP 23423
   Serial.println("Listen broadcast");
@@ -204,9 +215,9 @@ void loop() {
     case evInit:
       {
         Serial.println("Init");
-
-        Events.delayedPushMilli(5000, evStartOta);
-        myUdp.broadcast("{\"info\":\"Boot\"}");
+        Events.delayedPushMilli(delayTimeMaster + (WiFi.localIP()[3] * 100) + 500, evTimeMasterGrab);
+        Events.delayedPushMilli(2000, evStartOta);
+        myUdp.broadcast("{\"Info\":\"Boot\"}");
       }
       break;
     case ev1Hz:
@@ -262,6 +273,47 @@ void loop() {
           break;
       }
       break;
+      // Gestion du TimeMaster
+      // si un master est preset il envoi un evgrabMaster toute les minutes
+      // dans ce cas je reporte mon ev grabmaster et je perd mon status master
+    case evTimeMasterSyncr:
+      isTimeMaster = false;
+      Events.delayedPushMilli(delayTimeMaster + (WiFi.localIP()[3] * 100), evTimeMasterGrab);
+      //LedLife[1].setcolor((isMaster) ? rvb_blue : rvb_green, 30, 0, delayTimeMaster);
+      jobUpdateLed0();  //synchro de la led de vie
+      break;
+    //deviens master en cas d'absence du master local
+    case evTimeMasterGrab:
+      {
+        String aStr = F("{\"event\":\"evMasterSyncr\"}");
+        myUdp.broadcastEvent(F("evTimeMasterSyncr"));
+        Events.delayedPushMilli(delayTimeMaster, evTimeMasterGrab);
+        DT_println("evGrabMaster");
+        //LedLife[1].setcolor((isMaster) ? rvb_blue : rvb_green, 30, 0, delayGrabMaster);
+        jobUpdateLed0();
+        if (!isTimeMaster) {
+          isTimeMaster = true;
+          //Events.push(evStartAnim1);
+          //Events.push(evStartAnim3);
+          //LedLife[1].setcolor(rvb_red, 30, 0, delayGrabMaster);
+          // TODO placer cela dans le nodemcu de base
+          // pour l'instant c'est je passe master je donne mon heure (si elle est valide ou presque :)  )
+
+          // syncho de l'heure pour tout les bNodes
+          if (year(currentTime) > 2000) {
+            //{"TIME":{"timestamp":1707515817,"timezone":-1,"date":"2024-02-09 22:56:57"}}}
+            String aStr = F("{\"TIME\":{\"timestamp\":");
+            aStr += currentTime + timeZone * 3600;
+            aStr += F(",\"timezone\":");
+            aStr += timeZone;
+            aStr += F("}}");
+            myUdp.broadcast(aStr);
+          }
+        }
+      }
+      break;
+
+
 
     case evUdp:
       if (Events.ext == evxUdpRxMessage) {
@@ -299,19 +351,28 @@ void loop() {
         // start OTA
         String deviceName = nodeName;  // "ESP_";
 
-        ArduinoOTA.setHostname(deviceName.c_str());
         ArduinoOTA.begin();
         Events.delayedPushMilli(1000L * 15 * 60, evStopOta);  // stop OTA dans 15 Min
 
         //MDNS.update();
-        Serial.print("OTA on '");
+        Serial.print(F("OTA on '"));
         Serial.print(deviceName);
-        Serial.println("' started.");
-        Serial.print("SSID:");
+        Serial.print(F("' started SSID:"));
         Serial.println(WiFi.SSID());
-        myUdp.broadcast("{\"info\":\"start OTA\"}");
+        myUdp.broadcastInfo("start OTA");
         //end start OTA
       }
+      break;
+
+    case evReset:
+      T_println("Reset");
+      delay(1000);
+      Events.reset();
+      break;
+
+
+
+
     case evInString:
       //D_println(Keyboard.inputString);
       if (Keyboard.inputString.startsWith(F("?"))) {
@@ -371,16 +432,16 @@ void loop() {
       //        Events.reset();
       //      }
 
-      //      if (Keyboard.inputString.equals(F("RESET"))) {
-      //        Serial.println(F("RESET"));
-      //        Events.push(doReset);
-      //      }
+      if (Keyboard.inputString.equals(F("RESET"))) {
+        DT_println("CMD RESET");
+        Events.push(evReset);
+      }
       if (Keyboard.inputString.equals(F("FREE"))) {
-        DV_println(Events.freeRam());
-        String aStr = F("{\"info\":\"FREE=");
+        String aStr = F("Ram=");
         aStr += String(Events.freeRam());
-        aStr += "\"}";
-        myUdp.broadcast(aStr);
+        aStr += F(",APP=" APP_NAME);
+        Serial.println(aStr);
+        myUdp.broadcastInfo(aStr);
       }
 
 
