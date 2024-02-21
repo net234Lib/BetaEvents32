@@ -558,8 +558,9 @@ void jobCheckWifi() {
     wasConnected = WiFiConnected;
     jobUpdateLed0();
     if (WiFiConnected) {
-      //setSyncProvider(getWebTime);
-      //setSyncInterval(6 * 3600);
+      setSyncInterval(6 * 3600);  //  6 Heures
+      setSyncProvider(getWebTime);  //appel immediat 
+
       // lisen UDP 23423
       //        Serial.println("Listen broadcast");
       //        myUdp.begin();

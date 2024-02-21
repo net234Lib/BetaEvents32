@@ -26,7 +26,7 @@
 
  *************************************************/
 
-#define APP_NAME "bnode_minimal V1.0A"
+#define APP_NAME "bnode_minimal V1.0b"
 
 #include <ArduinoOTA.h>
 #include "EventsManager32.h"
@@ -40,7 +40,9 @@
 #ifdef ESP8266
 #include "ESP8266.h"
 #include <ESP8266WiFi.h>
-//#include <ESP8266HTTPClient.h>
+#include <ESP8266HTTPClient.h>
+
+
 //#elif defined(ESP32)
 //#include "ESP32.h"
 //#include <WiFi.h>
@@ -77,6 +79,7 @@ enum tUserEventCode {
   evBP0 = 100,
   evLed0,
   evUdp,
+  evPostInit,
   evStartOta,
   evStopOta,
   evTimeMasterGrab,   //Annonce le placement en MasterTime
@@ -128,7 +131,7 @@ bool sleepOk = true;
 int multi = 0;         // nombre de clic rapide
 bool configOk = true;  // global used by getConfig...
 const byte postInitDelay = 15;
-bool postInit = false;  // true postInitDelay secondes apres le boot (limitation des messages Slack)
+bool postInit = false;                  // true postInitDelay secondes apres le boot (limitation des messages Slack)
 const int delayTimeMaster = 60 * 1000;  // par defaut toute les minutes   TODO:  publier cette valeur dans le groupe ?
 bool isTimeMaster = false;
 
@@ -169,7 +172,10 @@ void setup() {
   // TODO: see with https://github.com/PaulStoffregen/Time to find a way to say timeNeedsSync
 
   currentTime = savedRTCmemory.actualTimestamp;
-  adjustTime(currentTime);
+  setSyncInterval(5 * 60);                //nextSyncTime = sysTime + syncInterval;
+  if (currentTime) setTime(currentTime);  //nextSyncTime = sysTime + syncInterval;
+
+
 
   // recuperation de la config dans config.json
   nodeName = jobGetConfigStr(F("nodename"));
@@ -203,6 +209,8 @@ void setup() {
 
   jobUpdateLed0();
 
+
+
   Serial.println("Bonjour ....");
 }
 
@@ -217,6 +225,8 @@ void loop() {
         Serial.println("Init");
         Events.delayedPushMilli(delayTimeMaster + (WiFi.localIP()[3] * 100) + 500, evTimeMasterGrab);
         Events.delayedPushMilli(2000, evStartOta);
+
+
         myUdp.broadcast("{\"Info\":\"Boot\"}");
       }
       break;
@@ -302,14 +312,18 @@ void loop() {
           // pour l'instant c'est je passe master je donne mon heure (si elle est valide ou presque :)  )
 
           // syncho de l'heure pour tout les bNodes
-          if (year(currentTime) > 2000) {
-            //{"TIME":{"timestamp":1707515817,"timezone":-1,"date":"2024-02-09 22:56:57"}}}
-            String aStr = F("{\"TIME\":{\"timestamp\":");
-            aStr += currentTime + timeZone * 3600;
-            aStr += F(",\"timezone\":");
-            aStr += timeZone;
-            aStr += F("}}");
-            myUdp.broadcast(aStr);
+          static int8_t timeSyncrCnt = 0;
+          if (timeSyncrCnt-- <= 0) {
+            timeSyncrCnt = 15;
+            if (timeStatus() != timeNotSet) {
+              //{"TIME":{"timestamp":1707515817,"timezone":-1,"date":"2024-02-09 22:56:57"}}}
+              String aStr = F("{\"TIME\":{\"timestamp\":");
+              aStr += currentTime + timeZone * 3600;
+              aStr += F(",\"timezone\":");
+              aStr += timeZone;
+              aStr += F("}}");
+              myUdp.broadcast(aStr);
+            }
           }
         }
       }
@@ -319,12 +333,12 @@ void loop() {
 
     case evUdp:
       if (Events.ext == evxUdpRxMessage) {
-        DTV_print("from",myUdp.rxFrom);
+        DTV_print("from", myUdp.rxFrom);
         DTV_println("got an Event UDP", myUdp.rxJson);
         JSONVar rxJson = JSON.parse(myUdp.rxJson);
 
         // event
-        // les events sont uniquement acceptés si le from est un membre du pannel
+        // evTimeMasterSyncr est toujour accepté
         JSONVar rxJson2 = rxJson["Event"];
         if (JSON.typeof(rxJson2).equals("string")) {
           String aStr = rxJson2;
@@ -338,7 +352,22 @@ void loop() {
           ///and (from.length() > 3 and from.startsWith(pannelName))
         }
 
-
+        //detection BOOT   (sent time if a member boot)
+        //{"bLed256C":{"info":"Boot"}}
+        rxJson2 = rxJson["Info"];
+        //DV_println(JSON.typeof(rxJson2));
+        if ((year(currentTime) > 2000) and isTimeMaster and JSON.typeof(rxJson2).equals("string")) {
+          //DV_println((String)rxJson2);
+          if (((String)rxJson2).equals("Boot")) {  //it is a memeber who boot
+            //{"TIME":{"timestamp":1707515817,"timezone":-1,"date":"2024-02-09 22:56:57"}}}
+            String aStr = F("{\"TIME\":{\"timestamp\":");
+            aStr += currentTime + timeZone * 3600;
+            aStr += F(",\"timezone\":");
+            aStr += timeZone;
+            aStr += F("}}");
+            myUdp.broadcast(aStr);
+          }
+        }
 
         //CMD
         //./bNodeCmd.pl bNode FREE -n
@@ -375,16 +404,16 @@ void loop() {
           DV_println(niceDisplayTime(aTime, true));
           int delta = aTime - currentTime;
           DV_println(delta);
-          if (abs(delta) < 5000) {
-            adjustTime(delta);
-            currentTime = now();
-          } else {
-            currentTime = aTime;
-            setTime(currentTime);
-          }
-          DV_println(currentTime);
+          //if (abs(delta) < 5000) {
+          //  adjustTime(delta);
+          //  currentTime = now();
+          //} else {
+          //  currentTime = aTime;
+          setTime(aTime);  // this will rearm the call to the
+          //}
+          //DV_println(currentTime);
 
-          DV_println(niceDisplayTime(currentTime, true));
+          //DV_println(niceDisplayTime(currentTime, true));
         }
       }
       break;  //evudp
@@ -496,9 +525,24 @@ void loop() {
         Serial.println(aStr);
         myUdp.broadcastInfo(aStr);
       }
+      //num {timeNotSet, timeNeedsSync, timeSet
+      if (Keyboard.inputString.equals(F("TIME?"))) {
+        String aStr = F("mydate=");
+        aStr += niceDisplayTime(currentTime, true);
+        aStr += F(" timeZone=");
+        aStr += timeZone;
+        aStr += F(" timeStatus=");
+        aStr += timeStatus();
+        Serial.println(aStr);
+        myUdp.broadcastInfo(aStr);
+      }
 
-if (Keyboard.inputString.equals(F("INFO"))) {
-        String aStr = F("isTimeMaster=");
+
+
+      if (Keyboard.inputString.equals(F("INFO"))) {
+        String aStr = F("node=");
+        aStr += nodeName;
+        aStr += F(" isTimeMaster=");
         aStr += String(isTimeMaster);
         aStr += F(" CPU=");
         aStr += String(Events._percentCPU);
@@ -508,7 +552,7 @@ if (Keyboard.inputString.equals(F("INFO"))) {
         //ledLifeVisible = true;
         //Events.delayedPushMilli(5 * 60 * 1000, evHideLedLife);
         myUdp.broadcastInfo(aStr);
-        DV_print(aStr)
+        DV_println(aStr)
       }
       if (Keyboard.inputString.equals("OTA")) {
         Events.push(evStartOta);
