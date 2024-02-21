@@ -1,6 +1,7 @@
 // get the time with a standard web server
 //#include <ESP8266HTTPClient.h>
-
+//time_t webClockLastTry;
+//int16_t webClockDelta;
 
 time_t getWebTime() {
   // connect to a captive portal to get time (theses portal are used by any navigators to check web connections)
@@ -12,21 +13,25 @@ time_t getWebTime() {
   // in fact any descent http web server redirect on https  so use your FAI web url (dont call it every seconds :)
   // mine is www.free.fr
 
-#define HTTP_SERVER "www.free.fr"  // my FAI web server
+  //#define HTTP_SERVER "www.free.fr"  // my FAI web server
 
-
-
-  DT_println("connect to " HTTP_SERVER " to get time");
   if (!WiFiConnected) {
-    DT_println("!! NO WIFI !!");
-    return(0);
+    DT_println("!! NO WIFI to syncr clock !!");
+    return (0);
   }
+
+  String urlServer = "http://";
+  urlServer += WiFi.gatewayIP().toString();
+
+  DV_println(urlServer);
+
+
 
   WiFiClient client;  // Wificlient doit etre declaré avant HTTPClient
   HTTPClient http;    //Declare an object of class HTTPClient (Gsheet and webclock)
-  
+
   http.setTimeout(500);
-  http.begin(client, "http://" HTTP_SERVER);  //Specify request destination
+  http.begin(client, urlServer);  //Specify request destination
   // we need date to setup clock so
   const char* headerKeys[] = { "date" };
   const size_t numberOfHeaders = 1;
@@ -36,8 +41,8 @@ time_t getWebTime() {
 
   if (httpCode < 0) {
     http.end();  //Close connection
-    DTV_println("Erreur GET()",httpCode);
-    
+    DTV_println("Erreur GET()", httpCode);
+
     return (0);
   }
 
@@ -45,7 +50,7 @@ time_t getWebTime() {
   tmElements_t dateStruct;
   {
     String headerDate = http.header(headerKeys[0]);
-
+    webClockLastTry = currentTime;
     // Check the header should be a 29 char texte like this 'Mon, 24 May 2021 13:57:04 GMT'
     //D_println(headerDate);
     if (!headerDate.endsWith(" GMT") || headerDate.length() != 29) {
@@ -79,8 +84,9 @@ time_t getWebTime() {
 
   time_t serverTS = makeTime(dateStruct) - (timeZone * 3600);  // change to local time
   //D_println(timeZone);
-  int deltaTime = serverTS - currentTime;
-  DV_println(deltaTime);
+  webClockDelta = serverTS - currentTime;
+  DV_println(webClockDelta);
+  webClockLastTry = serverTS;
   //D_println(niceDisplayTime(serverTS));
   //D_println(helperFreeRam());
   // we dont use the payload here

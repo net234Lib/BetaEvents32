@@ -26,9 +26,13 @@
 
  *************************************************/
 
+
 #define APP_NAME "bnode_minimal V1.0b"
 
 #include <ArduinoOTA.h>
+static_assert(sizeof(time_t) == 8, "This version works with time_t 64bit  move to ESP8266 kernel 3.0 or more");
+
+
 #include "EventsManager32.h"
 
 
@@ -134,6 +138,9 @@ const byte postInitDelay = 15;
 bool postInit = false;                  // true postInitDelay secondes apres le boot (limitation des messages Slack)
 const int delayTimeMaster = 60 * 1000;  // par defaut toute les minutes   TODO:  publier cette valeur dans le groupe ?
 bool isTimeMaster = false;
+uint32_t bootedSecondes = 0;
+time_t webClockLastTry = 0;
+int16_t webClockDelta = 0;
 
 
 
@@ -231,7 +238,7 @@ void loop() {
       }
       break;
     case ev1Hz:
-
+      bootedSecondes++;
       // check for connection to local WiFi  1 fois par seconde c'est suffisant
       jobCheckWifi();
 
@@ -533,6 +540,12 @@ void loop() {
         aStr += timeZone;
         aStr += F(" timeStatus=");
         aStr += timeStatus();
+        aStr += F(" webClockDelta=");
+        aStr += webClockDelta;
+        aStr += F("ms  webClockLastTry=");
+        aStr += niceDisplayTime(webClockLastTry, true);
+
+
         Serial.println(aStr);
         myUdp.broadcastInfo(aStr);
       }
@@ -548,7 +561,10 @@ void loop() {
         aStr += String(Events._percentCPU);
         aStr += F("% ack=");
         aStr += String(myUdp.ackPercent);
-        aStr += F("%");
+        aStr += F("%  booted=");
+        aStr += niceDisplayDelay(bootedSecondes);
+
+
         //ledLifeVisible = true;
         //Events.delayedPushMilli(5 * 60 * 1000, evHideLedLife);
         myUdp.broadcastInfo(aStr);

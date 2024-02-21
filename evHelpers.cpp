@@ -56,29 +56,29 @@ String niceDisplayDelay(time_t aDelay) {
   String txt;
   if (aDelay < 60) {
     txt = String(aDelay);
-    txt += " s";
+    txt += "s";
     return txt;
   }
   if (aDelay < 3600) {
     txt = String(aDelay / 60);
-    txt += " m ";
+    txt += "m ";
     txt += String(aDelay % 60);
-    txt += " s";
+    txt += "s";
     return txt;
   }
   if (aDelay < 3600L * 24) {
     aDelay = aDelay / 60;
     txt = String(aDelay / 60);
-    txt += " h ";
+    txt += "h ";
     txt += String(aDelay % 60);
-    txt += " m";
+    txt += "m";
     return txt;
   }
   aDelay = aDelay / 3600;
   txt = String(aDelay / 24);
-  txt += " J ";
+  txt += "J ";
   txt += String(aDelay % 24);
-  txt += " h";
+  txt += "h";
   return txt;
 }
 

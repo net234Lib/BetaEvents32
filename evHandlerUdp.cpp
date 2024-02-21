@@ -178,6 +178,46 @@ void evHandlerUdp::handle() {
           break;
         }
 
+
+#define TRAMEV1_ON
+//transforme une trame V1 en V3
+#ifdef TRAMEV1_ON
+        // EVENT <ntrame>\t<from>\t<named json struct>   // format V1
+        // BETA<ntrame>\t<from>\t<named json struct>   // format V2
+        if (aStr.startsWith("EVENT ") and aStr.endsWith("}")) {
+          DTV_println("V1toV3", aStr);
+          String bStr = "BETA";
+          aStr.remove(0, 6);  //remùove header
+          bStr += aStr;
+          aStr = bStr;
+          DV_println(aStr);
+        }  //
+#endif
+
+#define TRAMEV2_ON
+//transforme une trame V2 en V3
+#ifdef TRAMEV2_ON
+        // {"TRAME":<ntrame>,"<from>":<named json struct>}   // format V2
+        // BETA<ntrame>\t<from>\t<named json struct>   // format V2
+        if (aStr.startsWith("{\"TRAME\":") and aStr.endsWith("}")) {
+          DTV_println("V2toV3", aStr);
+          String bStr = "BETA";
+          aStr.remove(0, 9);                         //remùove header
+          bStr += grabFromStringUntil(aStr, ",\"");  // got ntrame
+          bStr += '\t';
+          bStr += grabFromStringUntil(aStr, "\":");  // got FROM
+          bStr += '\t';
+          bStr += aStr.substring(0, aStr.length() - 1);
+          aStr = bStr;
+          DV_println(aStr);
+        }  //
+
+
+
+
+#endif
+
+
         /*
         // filtrage des trame repetitive
 
@@ -223,7 +263,7 @@ void evHandlerUdp::handle() {
           break;
         }
   */
-        if ( not(aStr.startsWith("BETA") and aStr.endsWith("}")) ) {  //
+        if (not(aStr.startsWith("BETA") and aStr.endsWith("}"))) {  //
           DTV_print("Bad paquet", aStr);
           break;
         }
@@ -242,7 +282,7 @@ void evHandlerUdp::handle() {
         aUdpId[0] = trNum;
 
 
-       // c'est une nouvelle trame
+        // c'est une nouvelle trame
         bcast = (UDP.destinationIP() == broadcastIP);
         if (bcast and (random(100) < ackPercent)) {
           ack(trNum, rxFrom);
