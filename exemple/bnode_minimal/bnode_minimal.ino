@@ -354,11 +354,9 @@ void loop() {
             Events.delayedPushMilli(0, evTimeMasterSyncr);
             break;
           }
-
-          // autre event
-          ///and (from.length() > 3 and from.startsWith(pannelName))
         }
-
+        // autre event
+        ///and (from.length() > 3 and from.startsWith(pannelName))
         //detection BOOT   (sent time if a member boot)
         //{"bLed256C":{"info":"Boot"}}
         rxJson2 = rxJson["Info"];
