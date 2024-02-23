@@ -52,7 +52,7 @@
     
     *************************************************/
 
-#define APP_NAME "betaEvents V3.0.B4"
+#define APP_NAME "betaEvents32 V3.0.B4"
 
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>

@@ -38,6 +38,39 @@
 const uint16_t delayInterUdp = 200;  // delay entre 2 trames
 const uint8_t numberOfTrame = 4;     // nombre de trame repetitives
 
+String encode16bit(const String& str, uint16_t key) {
+    int len = str.length();
+    
+    String encoded = "";
+    encoded.reserve(len); // Réserver de l'espace pour optimiser l'utilisation du heap
+
+    for (int i = 0; i < len; i += 2) {
+        // Utilisation de uint8_t pour s'assurer que les caractères sont traités comme des octets
+        uint16_t pair_value = ((uint8_t)str[i] << 8);
+        if (i + 1 < len) {
+            pair_value |= (uint8_t)str[i + 1]; // Corrigé pour utiliser correctement '|='
+        }
+        
+        // Appliquer XOR avec la clé
+        uint16_t encoded_value = pair_value ^ key;
+        
+        // Convertir en String et ajouter au résultat
+     
+        encoded += (char)(encoded_value >> 8);
+        if (i + 1 < len) {
+            
+            encoded += (char)(encoded_value & 0xFF);
+        }
+        
+        // Mettre à jour la clé avec une rotation de 1 bit
+        key = ((key << 1) | (key >> 15)) & 0xFFFF;
+    }
+   
+    return encoded;
+}
+
+
+
 
 void udpTxList::add(const String& aJsonStr, const IPAddress aIp) {
   if (++cntTrameUDP == 0) cntTrameUDP++;

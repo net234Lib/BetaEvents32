@@ -16,4 +16,4 @@
 
 #define LED_BUILTIN G2
 #define BP0_PIN   G0                 //  Flash button
-#define LED0_PIN  LED_BUILTIN   //   By default Led0 is on LED_BUILTIN you can change it 16 on ESP
+#define LED0_PIN  LED_BUILTIN   //   By default Led0 is on LED_BUILTIN you can change it on ESP  usualy set to 2
