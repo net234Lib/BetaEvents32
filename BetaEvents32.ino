@@ -1,5 +1,5 @@
 /*************************************************
- *************************************************
+ *DEV************************************************
     Sketch betaEvents.ino   validation of lib betaEvents to deal nicely with events programing with Arduino
     Copyright 2020 Pierre HENRY net23@frdev.com All - right reserved.
 
@@ -52,7 +52,7 @@
     
     *************************************************/
 
-#define APP_NAME "betaEvents32 V3.0.B4"
+#define APP_NAME "betaEvents32DEV V3.0.C"
 
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
