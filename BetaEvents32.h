@@ -50,6 +50,7 @@
 #pragma once
 
 
+#include "evHelpers.h"
 #include "EventsManager32.h"
 // Events Manager build an instance called "Events" who care about events
 EventManager Events = EventManager();
