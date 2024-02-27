@@ -1,6 +1,7 @@
 /*************************************************
- *DEV************************************************
-    Sketch betaEvents.ino   validation of lib betaEvents to deal nicely with events programing with Arduino
+
+ *MAIN************************************************
+    Sketch betaEvents32.ino   validation of lib betaEvents to deal nicely with events programing with Arduino
     Copyright 2020 Pierre HENRY net23@frdev.com All - right reserved.
 
   This file is part of betaEvents.
@@ -49,10 +50,13 @@
      version specifique pour CPU 32 bit
      V3.0.B3  02/2024   delayedevent  remove ALL  previous evants
     V3.0.C    10/02/2024   renomage des delayedEvents
+    V3.0.C1   27/02/2024   depart clone Betaevent32DEV
     
     *************************************************/
 
+
 #define APP_NAME "betaEvents32DEV V3.0.C"
+
 
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
