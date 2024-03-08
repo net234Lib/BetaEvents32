@@ -102,7 +102,7 @@ struct stdEvent_t {
   //  stdEvent_t(const uint8_t code = evNill, const uint8_t ext ) : code(code), ext(ext) {};
   //  stdEvent_t(const uint8_t code = evNill, const char aChar) : code(code), aChar(aChar) {};
 
-  stdEvent_t(const stdEvent_t& stdevent)
+  stdEvent_t(const stdEvent_t& stdevent) 
     : code(stdevent.code), intExt2(stdevent.intExt2), data(stdevent.data){};
 
   uint8_t code;     // code of the event
@@ -133,7 +133,7 @@ public:
 };
 
 #include "evHandlers.h"
-#define evManager Events
+//#define evManager Events
 struct eventItem_t;
 struct delayEventItem_t;
 struct longDelayEventItem_t;
@@ -205,5 +205,4 @@ private:
 
 
 extern EventManager Events;
-
-#include "evHelpers.h"
+ 

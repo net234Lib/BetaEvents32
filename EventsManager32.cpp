@@ -102,7 +102,7 @@ struct longDelayEventItem_t : public stdEvent_t {
 
 eventHandler_t::eventHandler_t() {
   next = nullptr;
-  evManager.addHandleEvent(this);
+  Events.addHandleEvent(this);
 };
 
 
@@ -248,10 +248,10 @@ byte EventManager::nextEvent() {
     intExt2 = eventList->intExt2;
     delete eventList;
     eventList = itemPtr;
-    return (evManager.code);
+    return (Events.code);
   }
 
-  return (evManager.code = evNill);
+  return (Events.code = evNill);
 }
 
 
