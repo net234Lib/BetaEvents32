@@ -72,7 +72,7 @@
 //par defaut le debug
 //#define NO_DEBUG   // this keyword remove all Dxx_print  from code
 //#define NO_DEBUGGER // this remove debug instance
-
+#define DEBUG_ON
 #include "EventsManager32.h"
 EventManager Events = EventManager();
 // instance Serial
@@ -134,8 +134,19 @@ bool sendInfo = false;
 void setup() {
   enableWiFiAtBootTime();  // mendatory for autoconnect WiFi with ESP8266 kernel 3.0
   // IO Setup
-#if defined(ESP8266)
-  //  force Wifi en STA
+
+  
+
+  //Serial.begin(115200);
+  //Serial.println(F("\r\n\n" APP_NAME));
+  //Serial.println(F("Test1"));
+  // Start instance
+  Events.begin();
+  Serial.println(F("\r\n\n" APP_NAME));
+  Led0.setFrequence(1, 10);
+  Led1.setMillisec(2000, 10);
+
+//  force Wifi en STA
   if (WiFi.getMode() != WIFI_STA) {
     Serial.println(F("!!! Force WiFi to STA mode !!!"));
     WiFi.mode(WIFI_STA);
@@ -146,15 +157,8 @@ void setup() {
   // WiFi.forceSleepBegin();
   //WiFi.mode(WIFI_OFF);
 
-#endif
-  //Serial.begin(115200);
-  //Serial.println(F("\r\n\n" APP_NAME));
-  //Serial.println(F("Test1"));
-  // Start instance
-  Events.begin();
-  Serial.println(F("\r\n\n" APP_NAME));
-  Led0.setFrequence(1, 10);
-  Led1.setMillisec(2000, 10);
+
+
   Serial.println("Bonjour ....");
   DV_println(sizeof(stdEvent_t));
   displaySizeofItems();
@@ -305,7 +309,7 @@ void loop() {
         Events.delayedPushMilli(1000, evR1);
         static long start = millis();
         static long cnt = 0;
-        TV_println("evR1 err=", (millis()-start)-cnt++*1000);
+        TV_println("evR1 err=", (millis() - start) - cnt++ * 1000);
       }
       break;
 
@@ -313,7 +317,7 @@ void loop() {
       {
         static long start = millis();
         static long cnt = 0;
-        TV_println("evR2   err=", (millis()-start)-cnt++*1000);
+        TV_println("evR2   err=", (millis() - start) - cnt++ * 1000);
       }
       break;
 
@@ -443,6 +447,23 @@ void loop() {
         myUdp.broadcastInfo(aStr);
         DV_print(aStr)
       }
+
+
+      if (Keyboard.inputString.equals(F("WIFIOFF"))) {
+        WiFi.mode(WIFI_OFF);
+        //WiFi.forceSleepBegin();
+        T_print("WIFI_OFF")
+         V_println(WiFi.getMode());
+      }
+
+
+      if (Keyboard.inputString.equals(F("WIFISTA"))) {
+        WiFi.mode(WIFI_STA);
+        //WiFi.begin();
+        T_print("WIFI_STA")
+        V_println(WiFi.getMode());
+      }
+
 
       break;
   }

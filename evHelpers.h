@@ -36,7 +36,7 @@
 #define T_println(x) Serial.println(F(#x));
 #define V_println(x) Serial.print(F(#x " => '")); Serial.print(x); Serial.println("'");
 #define TV_println(x,y) Serial.print(F(#x " => '")); Serial.print(y); Serial.println("'");
-#define T_println(x) Serial.println(F(#x));
+#define T_print(x) Serial.print(F(#x));
 #define V_print(x) Serial.print(F(#x " => '")); Serial.print(x); Serial.print("', ");
 #define TV_print(x,y) Serial.print(F(#x " => '")); Serial.print(y); Serial.print("', ");
 #define V_printHEXln(x) Serial.print(F(#x " => '0x")); Serial.print(x,HEX); Serial.println("'");
