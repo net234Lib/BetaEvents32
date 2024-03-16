@@ -80,11 +80,11 @@ enum tEventCode {
   ev1Hz,       // un tick 1HZ   cumulative (see betaEvent.h)
   ev24H,       // 24H when timestamp pass over 24H
   evInit,      // event pushed par MyEvent.begin()
+  evPostInit,
   evInChar,
   evInString,
-  //evPB0,
-  //evLED0
-  //  evWEB = 20,
+  evOta = 20,
+  evWifi,
   //  evUser = 100,
 };
 

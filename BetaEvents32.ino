@@ -101,7 +101,7 @@ enum tUserEventCode {
   ev3S,
   evR1,
   evR2,
-  evUdp,
+  //evUdp,
   // evenement action
   doReset,
 };
@@ -120,13 +120,13 @@ evHandlerButton BP0(evBP0, BP0_PIN);
 // instance LED
 evHandlerLed Led0(evLed0, LED_BUILTIN, HIGH);
 evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
-
+/*
 // init UDP
 #include "evHandlerUdp.h"
 String nodeName = "BetaEvent32";
 const unsigned int localUdpPort = 23423;  // local port to listen on
 evHandlerUdp myUdp(evUdp, localUdpPort, nodeName);
-
+*/
 bool sleepOk = true;
 int multi = 0;  // nombre de clic rapide
 bool sendInfo = false;
@@ -187,16 +187,19 @@ void loop() {
     case evInit:
       {
         Serial.println("ev init");
-        myUdp.broadcastInfo("Boot");
+  //      myUdp.broadcastInfo("Boot");
       }
       break;
 
     case ev1Hz:
-      if (sendInfo) {
+/*      
+ *       
+ if (sendInfo) {
         String aStr = F("SECONDE=");
         aStr += second();
         myUdp.broadcastInfo(aStr);
       }
+ */
       break;
 
     case ev24H:
@@ -258,7 +261,7 @@ void loop() {
 
 
 
-
+/*
     case evUdp:
       if (Events.ext == evxUdpRxMessage) {
         DTV_println("got an Event UDP", myUdp.rxJson);
@@ -284,7 +287,7 @@ void loop() {
         }
       }
       break;
-
+*/
     case ev1S:
       Serial.println(F("EV1S"));
       V_println(helperFreeRam());
@@ -385,13 +388,14 @@ void loop() {
         Serial.print(F("Ram="));
         Serial.println(Events.freeRam());
       }
+      /*
       if (Keyboard.inputString.equals(F("BCAST"))) {
         Serial.println(F("bCast 3 messages"));
         myUdp.broadcastInfo(F("message1"));
         myUdp.broadcastInfo(F("message2"));
         myUdp.broadcastInfo(F("message3"));
       }
-
+       */
       if (Keyboard.inputString.equals(F("R0"))) {
         Serial.println(F("remove repeat 1s"));
         Events.removeDelayEvent(evR1);
@@ -431,7 +435,7 @@ void loop() {
         Serial.println(Events.freeRam());
         String aStr = F("FREE=");
         aStr += String(Events.freeRam());
-        myUdp.broadcastInfo(aStr);
+        //myUdp.broadcastInfo(aStr);
       }
 
       if (Keyboard.inputString.equals(F("RESET"))) {
@@ -442,10 +446,12 @@ void loop() {
         String aStr = F(" CPU=");
         aStr += String(Events._percentCPU);
         aStr += F(" ack=");
-        aStr += String(myUdp.ackPercent);
+/*        
+ *         
+aStr += String(myUdp.ackPercent);
         aStr += F("%");
         myUdp.broadcastInfo(aStr);
-        DV_print(aStr)
+ */        DV_print(aStr)
       }
 
 
