@@ -83,8 +83,9 @@ enum tEventCode {
   evPostInit,
   evInChar,
   evInString,
-  evOta = 20,
+  evOta = 20,   // a migrer dans bnOdes tools
   evWifi,
+  evTagHisto,
   //  evUser = 100,
 };
 
@@ -158,9 +159,9 @@ public:
   bool push(const uint8_t code, const int16_t param1, const int16_t param2);
   //   bool   pushFloat(const uint8_t code, const float   afloat);
   bool delayedPushMilli(const uint32_t delayMillisec, const uint8_t code);
-   bool repeatedPushMilli(const uint32_t delayMillisec, const uint8_t code);
+  bool repeatedPushMilli(const uint32_t delayMillisec, const uint8_t code);
   bool delayedPushMilli(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2 = 0);
-  bool repeatedPushMilli(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2 , const bool repeat= false);
+  bool repeatedPushMilli(const uint32_t delayMillisec, const uint8_t code, const int16_t param1, const int16_t param2, const bool repeat = false);
   //bool forceDelayedPushMilli(const uint32_t delayMillisec, const uint8_t code);
   bool forceDelayedPushMilli(const uint32_t delayMillisec, const uint8_t code, const int16_t param1 = 0, const int16_t param2 = 0);
   //    int    syncroSeconde(const int millisec = 0);

@@ -55,7 +55,7 @@
     *************************************************/
 
 
-#define APP_NAME "betaEvents32DEV V3.0.C"
+#define APP_NAME "betaEvents32 V3.0.C"
 
 
 #if defined(ESP8266)
@@ -74,7 +74,7 @@
 //#define NO_DEBUGGER // this remove debug instance
 #define DEBUG_ON
 #include "EventsManager32.h"
-EventManager Events = EventManager();
+//EventManager Events = EventManager();
 // instance Serial
 evHandlerSerial Keyboard;
 evHandlerDebug Debug;

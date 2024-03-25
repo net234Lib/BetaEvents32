@@ -480,7 +480,7 @@ bool EventManager::removeLongDelayEventFromList(const byte codeevent, longDelayE
 bool EventManager::removeDelayEvent(const byte codeevent) {
   return (removeDelayEventFromList(codeevent, &(eventMillisList)) || removeDelayEventFromList(codeevent, &(eventTenthList)) || removeLongDelayEventFromList(codeevent, &(eventSecondsList)));
 }
-
+EventManager Events = EventManager();
 
 //====== Sram dispo =========
 size_t EventManager::freeRam() {
