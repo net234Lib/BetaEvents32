@@ -20,7 +20,7 @@
     along with betaEvents.  If not, see <https://www.gnu.org/licenses/lglp.txt>.
 
   info in evHandlerDHT20.h
-  */
+*/
 //    FILE: DHT20_async.ino
 //  AUTHOR: Rob Tillaart
 // PURPOSE: Demo for DHT20 I2C humidity & temperature sensor
@@ -42,8 +42,8 @@ DHT20 DHT;
 
 
 #include  "evHandlerDHT20.h"
-  void evHandlerDTH20::begin() {
-    Wire.begin();
+void evHandlerDht20::begin() {
+  Wire.begin();
   //Wire.setClock(400000);
 
   DHT.begin();  //  ESP32 default 21, 22
@@ -53,21 +53,29 @@ DHT20 DHT;
 };
 
 // gestion des evenements
-void evHandlerDTH20::handle() {
+void evHandlerDht20::handle() {
   if (Events.code != evDth20) return;
   if (Events.ext == evxDthStart) {
-    if (DHT.requestData()) {
-      Events.forceDelayedPushMilli(2000,evDth20,evxDthRun); // lecture dans 2 secondes
+    if (!DHT.requestData()) {
+      Events.forceDelayedPushMilli(2000, evDth20, evxDthRun); // lecture dans 2 secondes
       return;
-    } 
+    }
     error = DHT.readStatus();
-    Events.push(evDth20,evxDthError,error);
+    Events.push(evDth20, evxDthError, error);
     return;
   }
   if (Events.ext == evxDthRun) {
     DHT.readData();
     DHT.convert();
-    Events.push(evDth20,evxDthRead);  //inform user 
+    Events.push(evDth20, evxDthRead); //inform user
   }
   return;
 };
+
+
+float  evHandlerDht20::temperature() {
+  return (DHT.getTemperature());
+}
+float  evHandlerDht20::humidity() {
+  return (DHT.getHumidity());
+}

@@ -1,6 +1,6 @@
 /*************************************************
 
- *MAIN************************************************
+  MAIN***********************************************
     Sketch betaEvents32.ino   validation of lib betaEvents to deal nicely with events programing with Arduino
     Copyright 2020 Pierre HENRY net23@frdev.com All - right reserved.
 
@@ -41,8 +41,8 @@
       corections evHandlerLed sur le true/false
     V2.2  27/10/2021
        more arduino like lib with self built in instance
-    V2.2a  11/11/2021 
-       add begin in evHandles  
+    V2.2a  11/11/2021
+       add begin in evHandles
 
     V2.3    09/03/2022   isolation of evHandler for compatibility with dual core ESP32
     V2.4    30/09/2022   Isolation des IO (evhandlerOutput)
@@ -51,7 +51,7 @@
      V3.0.B3  02/2024   delayedevent  remove ALL  previous evants
     V3.0.C    10/02/2024   renomage des delayedEvents
     V3.0.C1   27/02/2024   depart clone Betaevent32DEV
-    
+
     *************************************************/
 
 
@@ -120,12 +120,18 @@ evHandlerButton BP0(evBP0, BP0_PIN);
 // instance LED
 evHandlerLed Led0(evLed0, LED_BUILTIN, HIGH);
 evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
+
+
+// instance DHT20
+#include "evHandlerDHT20.h"
+evHandlerDht20 DHT20(5000);
+
 /*
-// init UDP
-#include "evHandlerUdp.h"
-String nodeName = "BetaEvent32";
-const unsigned int localUdpPort = 23423;  // local port to listen on
-evHandlerUdp myUdp(evUdp, localUdpPort, nodeName);
+  // init UDP
+  #include "evHandlerUdp.h"
+  String nodeName = "BetaEvent32";
+  const unsigned int localUdpPort = 23423;  // local port to listen on
+  evHandlerUdp myUdp(evUdp, localUdpPort, nodeName);
 */
 bool sleepOk = true;
 int multi = 0;  // nombre de clic rapide
@@ -135,7 +141,7 @@ void setup() {
   enableWiFiAtBootTime();  // mendatory for autoconnect WiFi with ESP8266 kernel 3.0
   // IO Setup
 
-  
+
 
   //Serial.begin(115200);
   //Serial.println(F("\r\n\n" APP_NAME));
@@ -146,7 +152,7 @@ void setup() {
   Led0.setFrequence(1, 10);
   Led1.setMillisec(2000, 10);
 
-//  force Wifi en STA
+  //  force Wifi en STA
   if (WiFi.getMode() != WIFI_STA) {
     Serial.println(F("!!! Force WiFi to STA mode !!!"));
     WiFi.mode(WIFI_STA);
@@ -189,19 +195,19 @@ void loop() {
     case evInit:
       {
         Serial.println("ev init");
-  //      myUdp.broadcastInfo("Boot");
+        //      myUdp.broadcastInfo("Boot");
       }
       break;
 
     case ev1Hz:
-/*      
- *       
- if (sendInfo) {
-        String aStr = F("SECONDE=");
-        aStr += second();
-        myUdp.broadcastInfo(aStr);
-      }
- */
+      /*
+
+        if (sendInfo) {
+              String aStr = F("SECONDE=");
+              aStr += second();
+              myUdp.broadcastInfo(aStr);
+            }
+      */
       break;
 
     case ev24H:
@@ -212,8 +218,24 @@ void loop() {
       }
       break;
 
-
-
+    case evDth20: {
+        switch (Events.ext) {
+          case evxDthStart:
+            T_println("evxDhtStart");
+            break;
+          case evxDthRun:
+            T_println("evxDhtRun");
+            break;
+          case evxDthRead:
+            V_println(DHT20.temperature());
+            V_println(DHT20.humidity());
+            break;
+          case evxDthError:
+            V_println(Events.intExt2);
+            break;
+        }
+      }
+      break;
     case evBP0:
       switch (Events.ext) {
         case evxOn:
@@ -263,33 +285,33 @@ void loop() {
 
 
 
-/*
-    case evUdp:
-      if (Events.ext == evxUdpRxMessage) {
-        DTV_println("got an Event UDP", myUdp.rxJson);
+    /*
+        case evUdp:
+          if (Events.ext == evxUdpRxMessage) {
+            DTV_println("got an Event UDP", myUdp.rxJson);
 
-        JSONVar rxJson = JSON.parse(myUdp.rxJson);
-        String from = rxJson.keys()[0];
+            JSONVar rxJson = JSON.parse(myUdp.rxJson);
+            String from = rxJson.keys()[0];
 
 
-        //CMD
-        JSONVar rxJson2 = rxJson[from]["CMD"];
-        if (JSON.typeof(rxJson2).equals("object")) {
-          String dest = rxJson2.keys()[0];
-          // Les CMD acceptée doivent etre adressé a ce module
-          if (dest.equals("ALL") or (dest.length() > 3 and nodeName.startsWith(dest))) {
-            String aCmd = rxJson2[dest];
-            aCmd.trim();
-            DV_println(aCmd);
-            if (aCmd.startsWith(F("NODE=")) and !nodeName.equals(dest)) break;  // NODE= not allowed on aliases
-            if (aCmd.length()) Keyboard.setInputString(aCmd);
-          } else {
-            DTV_println("CMD not for me.", dest);
+            //CMD
+            JSONVar rxJson2 = rxJson[from]["CMD"];
+            if (JSON.typeof(rxJson2).equals("object")) {
+              String dest = rxJson2.keys()[0];
+              // Les CMD acceptée doivent etre adressé a ce module
+              if (dest.equals("ALL") or (dest.length() > 3 and nodeName.startsWith(dest))) {
+                String aCmd = rxJson2[dest];
+                aCmd.trim();
+                DV_println(aCmd);
+                if (aCmd.startsWith(F("NODE=")) and !nodeName.equals(dest)) break;  // NODE= not allowed on aliases
+                if (aCmd.length()) Keyboard.setInputString(aCmd);
+              } else {
+                DTV_println("CMD not for me.", dest);
+              }
+            }
           }
-        }
-      }
-      break;
-*/
+          break;
+    */
     case ev1S:
       Serial.println(F("EV1S"));
       V_println(helperFreeRam());
@@ -391,13 +413,13 @@ void loop() {
         Serial.println(Events.freeRam());
       }
       /*
-      if (Keyboard.inputString.equals(F("BCAST"))) {
+        if (Keyboard.inputString.equals(F("BCAST"))) {
         Serial.println(F("bCast 3 messages"));
         myUdp.broadcastInfo(F("message1"));
         myUdp.broadcastInfo(F("message2"));
         myUdp.broadcastInfo(F("message3"));
-      }
-       */
+        }
+      */
       if (Keyboard.inputString.equals(F("R0"))) {
         Serial.println(F("remove repeat 1s"));
         Events.removeDelayEvent(evR1);
@@ -448,12 +470,12 @@ void loop() {
         String aStr = F(" CPU=");
         aStr += String(Events._percentCPU);
         aStr += F(" ack=");
-/*        
- *         
-aStr += String(myUdp.ackPercent);
-        aStr += F("%");
-        myUdp.broadcastInfo(aStr);
- */        DV_print(aStr)
+        /*
+
+          aStr += String(myUdp.ackPercent);
+                aStr += F("%");
+                myUdp.broadcastInfo(aStr);
+        */        DV_print(aStr)
       }
 
 
@@ -461,7 +483,7 @@ aStr += String(myUdp.ackPercent);
         WiFi.mode(WIFI_OFF);
         //WiFi.forceSleepBegin();
         T_print("WIFI_OFF")
-         V_println(WiFi.getMode());
+        V_println(WiFi.getMode());
       }
 
 

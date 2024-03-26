@@ -46,21 +46,16 @@ typedef enum { evxDthStart =0,  // initialise la lecture
 
 
 
-class evHandlerDTH20 : private eventHandler_t  {
+class evHandlerDht20 : private eventHandler_t  {
   public:
-    evHandlerDTH20(const uint8_t aPinNumber, const uint32_t aDelai) :
+    evHandlerDht20( const uint32_t aDelai) :
        delai(aDelai) {};
     virtual void begin()  override;
     virtual void handle()  override;
-    float  temperature() {
-      return (DHT.getTemperature());
-    }
-    float  humidity() {
-      return (DHT.getHumidity());
-    }
+    float  temperature();
+    float  humidity();
     uint8_t error;
 
   private:
     uint32_t delai;
 };
-
