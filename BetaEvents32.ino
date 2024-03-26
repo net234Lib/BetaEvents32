@@ -166,6 +166,8 @@ void setup() {
   DV_println(sizeof(int));
   DV_println(sizeof(long));
   DV_println(sizeof(long long));
+  DV_println(sizeof(float));
+  DV_println(sizeof(double));
   //Serial.println(sizeof(eventItem_t));
   //DV_println(sizeof(delayEventItem_t));
   //DV_println(sizeof(longDelayEventItem_t));

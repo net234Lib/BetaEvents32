@@ -83,7 +83,8 @@ enum tEventCode {
   evPostInit,
   evInChar,
   evInString,
-  evOta = 20,   // a migrer dans bnOdes tools
+  evDth20 = 20,
+  evOta = 50,   // a migrer dans bnOdes tools
   evWifi,
   evTagHisto,
   //  evUser = 100,
@@ -121,6 +122,16 @@ struct stdEvent_t {
 
 
 // base pour un eventHandler (gestionaire avec un handleEvent);
+// get retourne dans l'ordre :
+// 1 les delayed-event de precision millisecondes  (inferieurs a 1 seconde)
+// 2 les events 100Hz  en non cumulatif
+// 3 les events  10Hz  en non cumulatif   (les ev10Hz scan les delayed events de moins 10 minutes)
+// 4 les event    1Hz  en cumulatif       (les ev1Hz scan les delayed events de plus de 10 minutes)
+// 5 les events des handlers (appel du get de chaque handler)
+// 6 les events presents dans la liste d'attente (push)
+// 7 si l'event precedent n'etait pas un nilEvent un nilEvent est envoyé
+// sinon un delay de 1 millisec effectué 
+
 class eventHandler_t {
 public:
   eventHandler_t* next;  // handle suivant

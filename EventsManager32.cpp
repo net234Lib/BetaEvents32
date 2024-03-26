@@ -431,6 +431,9 @@ bool EventManager::delayedPushMilli(const uint32_t delayMillisec, const uint8_t 
   return (forceDelayedPushMilli(delayMillisec, code));
 }
 
+// le repeated ne peut pas etre inferieur a 10Ms
+// il efface tout les pendinfg event du meme code
+// les 2 parametres sont forcement a zero 
 bool EventManager::repeatedPushMilli(const uint32_t delayMillisec, const uint8_t code) {
   while (removeDelayEvent(code)) {};
   if (delayMillisec < 10) return (false);
