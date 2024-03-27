@@ -44,7 +44,6 @@ DHT20 DHT;
 #include  "evHandlerDHT20.h"
 void evHandlerDht20::begin() {
   Wire.begin();
-  //Wire.setClock(400000);
 
   DHT.begin();  //  ESP32 default 21, 22
   //TODO: check for minimum delay 5s
@@ -67,15 +66,27 @@ void evHandlerDht20::handle() {
   if (Events.ext == evxDthRun) {
     DHT.readData();
     DHT.convert();
+    float aTemperature = DHT.getTemperature();
+    float aHumidity = DHT.getHumidity();
     Events.push(evDth20, evxDthRead); //inform user
+    if ( abs(humidity-aHumidity)>deltaHum ) {
+      if (!humidity)  humidity=aHumidity;
+      humidity = (humidity  + aHumidity) / 2;
+      Events.push(evDth20, evxDthHumidity, humidity*100);
+    }
+    if ( abs(temperature-aTemperature)>deltaTemp ) {
+      if (!temperature) temperature = aTemperature;
+      temperature = (temperature + aTemperature) / 2;
+      Events.push(evDth20, evxDthTemperature, temperature*100);
+    }
   }
   return;
 };
 
-
-float  evHandlerDht20::temperature() {
+float  evHandlerDht20::getTemperature() {
   return (DHT.getTemperature());
 }
-float  evHandlerDht20::humidity() {
+float  evHandlerDht20::getHumidity() {
   return (DHT.getHumidity());
 }
+

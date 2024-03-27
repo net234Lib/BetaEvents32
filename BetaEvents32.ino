@@ -218,7 +218,8 @@ void loop() {
       }
       break;
 
-    case evDth20: {
+    case evDth20:
+      {
         switch (Events.ext) {
           case evxDthStart:
             T_println("evxDhtStart");
@@ -227,8 +228,14 @@ void loop() {
             T_println("evxDhtRun");
             break;
           case evxDthRead:
-            V_println(DHT20.temperature());
-            V_println(DHT20.humidity());
+            V_println(DHT20.getTemperature());
+            V_println(DHT20.getHumidity());
+            break;
+          case evxDthHumidity:
+            TV_println("Humidity",(float)Events.intExt2 / 100);
+            break;
+          case evxDthTemperature:
+             TV_println("Temperature",(float)Events.intExt2 / 100);
             break;
           case evxDthError:
             V_println(Events.intExt2);
@@ -475,7 +482,8 @@ void loop() {
           aStr += String(myUdp.ackPercent);
                 aStr += F("%");
                 myUdp.broadcastInfo(aStr);
-        */        DV_print(aStr)
+        */
+        DV_print(aStr)
       }
 
 
@@ -483,7 +491,7 @@ void loop() {
         WiFi.mode(WIFI_OFF);
         //WiFi.forceSleepBegin();
         T_print("WIFI_OFF")
-        V_println(WiFi.getMode());
+          V_println(WiFi.getMode());
       }
 
 
@@ -491,7 +499,7 @@ void loop() {
         WiFi.mode(WIFI_STA);
         //WiFi.begin();
         T_print("WIFI_STA")
-        V_println(WiFi.getMode());
+          V_println(WiFi.getMode());
       }
 
 
