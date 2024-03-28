@@ -23,7 +23,7 @@
    History
 
    works with beteEvents32 V3.0
-  
+
     *************************************************/
 #pragma once
 #include <Arduino.h>
@@ -36,32 +36,35 @@
    gestion d'un DHT20 en I2C
    lecture reguliere de la temperature et de l'humidité
 
-   retourne evxValue  
+   retourne evxValue
 
  ***********************************************************/
-typedef enum { evxDthStart =0,  // initialise la lecture 
+typedef enum { evxDthStart = 0, // initialise la lecture
                evxDthRun,      // getting data
-               evxDthRead,    // read done 
-               evxDthTemperature,    // new value for temp
-               evxDthHumidity,       // new value for Humidity
-               evxDthError }  tevxDth;
+               evxDthRead,    // read done
+               //evxDthTemperature,    // new value for temp
+               //evxDthHumidity,       // new value for Humidity
+               evxDthError
+             }  tevxDth;
 
 
 
 class evHandlerDht20 : private eventHandler_t  {
   public:
-    evHandlerDht20( const uint32_t aDelai = 60000UL,const float aDeltaTemp = 0.1,const float aDeltaHum= 1) :
-       deltaTemp(aDeltaTemp),deltaHum(aDeltaHum),delai(aDelai) {};
+    evHandlerDht20( const uint32_t aDelai = 60000UL ) :
+       delai(aDelai) {};
+    //    evHandlerDht20( const uint32_t aDelai = 60000UL,const float aDeltaTemp = 0.1,const float aDeltaHum= 1) :
+    // deltaTemp(aDeltaTemp), deltaHum(aDeltaHum), delai(aDelai) {};
     virtual void begin()  override;
     virtual void handle()  override;
     float  getTemperature();  //read temp now      use temperature below
     float  getHumidity();     //read humidity now  use humidity below
     uint8_t error;
-    float temperature;
-    float humidity;
-    float deltaTemp;
-    float deltaHum;
-    
+    //float temperature;
+    //float humidity;
+    //float deltaTemp;
+    //float deltaHum;
+
   private:
     uint32_t delai;
 };

@@ -66,9 +66,10 @@ void evHandlerDht20::handle() {
   if (Events.ext == evxDthRun) {
     DHT.readData();
     DHT.convert();
-    float aTemperature = DHT.getTemperature();
-    float aHumidity = DHT.getHumidity();
+    //float aTemperature = DHT.getTemperature();
+    //float aHumidity = DHT.getHumidity();
     Events.push(evDth20, evxDthRead); //inform user
+    /*
     if ( abs(humidity-aHumidity)>deltaHum ) {
       if (!humidity)  humidity=aHumidity;
       humidity = (humidity  + aHumidity) / 2;
@@ -79,6 +80,7 @@ void evHandlerDht20::handle() {
       temperature = (temperature + aTemperature) / 2;
       Events.push(evDth20, evxDthTemperature, temperature*100);
     }
+    */
   }
   return;
 };
@@ -89,4 +91,3 @@ float  evHandlerDht20::getTemperature() {
 float  evHandlerDht20::getHumidity() {
   return (DHT.getHumidity());
 }
-

@@ -124,7 +124,8 @@ evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
 
 // instance DHT20
 #include "evHandlerDHT20.h"
-evHandlerDht20 DHT20(5000);
+evHandlerDht20 DHT20(1000L * 60);
+bool dhtInfo = false;
 
 /*
   // init UDP
@@ -222,21 +223,25 @@ void loop() {
       {
         switch (Events.ext) {
           case evxDthStart:
-            T_println("evxDhtStart");
+            if (dhtInfo) T_println("evxDhtStart");
             break;
           case evxDthRun:
-            T_println("evxDhtRun");
+            if (dhtInfo) T_println("evxDhtRun");
             break;
           case evxDthRead:
+
+
             V_println(DHT20.getTemperature());
             V_println(DHT20.getHumidity());
             break;
-          case evxDthHumidity:
-            TV_println("Humidity",(float)Events.intExt2 / 100);
-            break;
-          case evxDthTemperature:
-             TV_println("Temperature",(float)Events.intExt2 / 100);
-            break;
+          /*
+                   case evxDthHumidity:
+                     TV_println("Humidity", (float)Events.intExt2 / 100);
+                     break;
+                   case evxDthTemperature:
+                     TV_println("Temperature", (float)Events.intExt2 / 100);
+                     break;
+          */
           case evxDthError:
             V_println(Events.intExt2);
             break;
@@ -473,6 +478,10 @@ void loop() {
         Serial.println(F("RESET"));
         Events.push(doReset);
       }
+      if (Keyboard.inputString.equals(F("DHTINFO"))) {
+        dhtInfo = !dhtInfo;
+        V_println(dhtInfo);
+      }
       if (Keyboard.inputString.equals(F("INFO"))) {
         String aStr = F(" CPU=");
         aStr += String(Events._percentCPU);
@@ -491,7 +500,7 @@ void loop() {
         WiFi.mode(WIFI_OFF);
         //WiFi.forceSleepBegin();
         T_print("WIFI_OFF")
-          V_println(WiFi.getMode());
+        V_println(WiFi.getMode());
       }
 
 
@@ -499,7 +508,7 @@ void loop() {
         WiFi.mode(WIFI_STA);
         //WiFi.begin();
         T_print("WIFI_STA")
-          V_println(WiFi.getMode());
+        V_println(WiFi.getMode());
       }
 
 
