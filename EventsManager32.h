@@ -84,6 +84,7 @@ enum tEventCode {
   evInChar,
   evInString,
   evDth20 = 20,
+  evDs18b20,
   evOta = 50,   // a migrer dans bnOdes tools
   evWifi,
   evTagHisto,

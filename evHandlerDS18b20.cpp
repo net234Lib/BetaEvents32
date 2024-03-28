@@ -1,5 +1,5 @@
 #include "EventsManager32.h"
-#include <OneWire.h>
+
 
 // Version evenementielle de l'exemple de la lib standard OneDrive
 // OneWire DS18S20, DS18B20, DS1822 Temperature Example
@@ -10,8 +10,8 @@
 // https://github.com/milesburton/Arduino-Temperature-Control-Library
 
 
-
-
+#include "evHandlerDS18b20.h"
+#define MAXDS18b20 99
 
 
 //evHandlerDS18x20::evHandlerDS18x20(const uint8_t aPinNumber, const uint16_t aDelai) :
@@ -19,17 +19,17 @@
 //  OneWire(aPinNumber)
 //{};
 
-void evHandlerDS18x20::begin() {
-  Events.delayedPushMilli(delai, evDs18x20, evxDsStart); // relecture dans le delai imposé
+void evHandlerDS18b20::begin() {
+  Events.delayedPushMilli(delai, evDs18b20, evxDsStart); // relecture dans le delai imposé
   reset_search();
   //    delay(250);
   current = 0;
-  Events.forceDelayedPushMilli(250, evDs18x20, evxDsSearch, true); // next read in 250ms
+  Events.forceDelayedPushMilli(250, evDs18b20, evxDsSearch, true); // next read in 250ms
 };
 
 // gestion des evenements
-void evHandlerDS18x20::handle() {
-  if (Events.code != evDs18x20) return;
+void evHandlerDS18b20::handle() {
+  if (Events.code != evDs18b20) return;
   if (Events.ext == evxDsStart) {
     begin();
     return;
@@ -39,12 +39,12 @@ void evHandlerDS18x20::handle() {
       //Serial.println("No more addresses.");
       if (current == 0) {
         error = 1; // aucune sondes
-        Events.push( evDs18x20, evxDsError);
+        Events.push( evDs18b20, evxDsError);
       }
       //derniere sonde lue
-      #if LED0_PIN == ONEWIRE_PIN
-      pinMode(LED0_PIN,OUTPUT);
-      #endif
+      //#if LED0_PIN == ONEWIRE_PIN
+      //pinMode(LED0_PIN,OUTPUT);
+      //#endif
       return;
     }
     //   Serial.print("ROM =");
@@ -55,7 +55,7 @@ void evHandlerDS18x20::handle() {
     if (OneWire::crc8(addr, 7) != addr[7]) {
       //  Serial.println("CRC is not valid!");
       error = 2;  // crc error
-      Events.push( evDs18x20, evxDsError);
+      Events.push( evDs18b20, evxDsError);
       return;
     }
     current++;
@@ -76,7 +76,7 @@ void evHandlerDS18x20::handle() {
       default:
         //        Serial.println("Device is not a DS18x20 family device.");
         error = 3; // bad device
-        Events.push( evDs18x20, evxDsError);
+        Events.push( evDs18b20, evxDsError);
         return;
     }
     error = 0;
@@ -84,7 +84,7 @@ void evHandlerDS18x20::handle() {
     select(addr);
     write(0x44, 1);        // start conversion, with parasite power on at the end
     //delay(1000);
-    Events.forceDelayedPushMilli(900, evDs18x20, evxDsRead, true); // get converted value in 1000ms ( > 750ms)
+    Events.forceDelayedPushMilli(900, evDs18b20, evxDsRead, true); // get converted value in 1000ms ( > 750ms)
     return;
   }
   if (Events.ext == evxDsRead) {
@@ -105,7 +105,7 @@ void evHandlerDS18x20::handle() {
     //    Serial.print(OneWire::crc8(data, 8), HEX);
     //    Serial.println();
     error = (OneWire::crc8(data, 8) == data[8]) ? 0 : 2; // erreur crc non bloquante
-    if (error) Events.push( evDs18x20, evxDsError);
+    if (error) Events.push( evDs18b20, evxDsError);
 
     // Convert the data to actual temperature
     // because the result is a 16 bit signed integer, it should
@@ -127,15 +127,15 @@ void evHandlerDS18x20::handle() {
       //// default is 12 bit resolution, 750 ms conversion time
     }
 
-    if (current < MAXDS18x20) Events.push(evDs18x20+current, 100L * raw / 16);
+    if (current < MAXDS18b20) Events.push(evDs18b20+current, 100L * raw / 16);
 
-    Events.forceDelayedPushMilli(0, evDs18x20, evxDsSearch, true); // recherche de la sonde suivante
+    Events.forceDelayedPushMilli(0, evDs18b20, evxDsSearch, true); // recherche de la sonde suivante
     return;
   }
   return;
 }
 
-uint8_t evHandlerDS18x20::getNumberOfDevices() {
+uint8_t evHandlerDS18b20::getNumberOfDevices() {
   uint8_t numberOfDevices = 0;
   reset_search();
   while (search(addr)) {
