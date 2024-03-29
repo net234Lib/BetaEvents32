@@ -65,8 +65,12 @@ struct delayEventItem_t : public stdEvent_t {
   delayEventItem_t(const uint16_t aDelay, const uint8_t code, const int ext = 0)
     : stdEvent_t(code, ext), nextItemPtr(nullptr), delay(aDelay), refDelay(0) {}
   delayEventItem_t(const uint16_t aDelay, const uint8_t code, const int16_t int1, const int16_t int2, const bool repeat = false)
-    : stdEvent_t(code, int1, int2), nextItemPtr(nullptr), delay(aDelay) {
-    refDelay = (repeat) ? aDelay : 0;
+    : stdEvent_t(code, int1, int2), nextItemPtr(nullptr), delay(aDelay), refDelay(0) {
+    //TODO:  un delay de depart different de 0
+    if (repeat) {
+      refDelay = aDelay;
+      delay = 0;
+    }
   }
   delayEventItem_t(const delayEventItem_t& stdEvent)
     : stdEvent_t(stdEvent), nextItemPtr(nullptr), delay(stdEvent.delay), refDelay(stdEvent.refDelay) {}
@@ -79,8 +83,12 @@ struct longDelayEventItem_t : public stdEvent_t {
   longDelayEventItem_t(const uint32_t aDelay, const uint8_t code, const int ext = 0)
     : stdEvent_t(code, ext), nextLongItemPtr(nullptr), longDelay(aDelay), longRefDelay(0) {}
   longDelayEventItem_t(const uint16_t aDelay, const uint8_t code, const int16_t int1, const int16_t int2, const bool repeat = false)
-    : stdEvent_t(code, int1, int2), nextLongItemPtr(nullptr), longDelay(aDelay) {
-    longRefDelay = (repeat) ? aDelay : 0;
+    : stdEvent_t(code, int1, int2), nextLongItemPtr(nullptr), longDelay(aDelay), longRefDelay(0) {
+       //TODO:  un delay de depart different de 0
+    if (repeat) {
+      longRefDelay = aDelay;
+      longDelay = 0;
+    }
   }
   longDelayEventItem_t(const longDelayEventItem_t& stdEvent)
     : stdEvent_t(stdEvent), nextLongItemPtr(nullptr), longDelay(stdEvent.longDelay), longRefDelay(stdEvent.longRefDelay) {}
@@ -91,10 +99,7 @@ struct longDelayEventItem_t : public stdEvent_t {
 
 
 
-#ifdef __AVR__
-#include <avr/sleep.h>
-#include <avr/wdt.h>
-#endif
+
 
 //#ifdef ESP32
 //#include <driver/uart.h>
@@ -267,7 +272,7 @@ void EventManager::parseDelayList(delayEventItem_t** ItemPtr, const uint16_t del
       delayEventItem_t* aDelayItemPtr = *ItemPtr;
       push(*aDelayItemPtr);
       //DV_println((*ItemPtr)->refDelay);
-      if ( (*ItemPtr)->refDelay == 0) {  //true or
+      if ((*ItemPtr)->refDelay == 0) {  //true or
         *ItemPtr = (*ItemPtr)->nextItemPtr;
         delete aDelayItemPtr;
       } else {
@@ -433,7 +438,7 @@ bool EventManager::delayedPushMilli(const uint32_t delayMillisec, const uint8_t 
 
 // le repeated ne peut pas etre inferieur a 10Ms
 // il efface tout les pendinfg event du meme code
-// les 2 parametres sont forcement a zero 
+// les 2 parametres sont forcement a zero
 bool EventManager::repeatedPushMilli(const uint32_t delayMillisec, const uint8_t code) {
   while (removeDelayEvent(code)) {};
   if (delayMillisec < 10) return (false);
