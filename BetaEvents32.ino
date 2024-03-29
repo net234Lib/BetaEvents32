@@ -110,8 +110,7 @@ enum tUserEventCode {
 #define BP0_PIN 0  //D3
 #define BP1_PIN 14
 #define LED1_PIN 16
-
-
+#define ONEWIRE_PIN D4  //SHARE LED BUILTIN !!!
 // instances poussoir
 evHandlerButton BP0(evBP0, BP0_PIN);
 //evHandlerButton BP1(evBP1, BP1_PIN);
@@ -124,13 +123,13 @@ evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
 
 // instance DHT20
 #include "evHandlerDHT20.h"
-evHandlerDht20 evDHT20(1000L * 60);
-bool dhtInfo = true;
+evHandlerDht20 monDHT20(1000L * 60);
+bool dhtInfo = false;
 
 // instance DS18b20
 #include "evHandlerDS18b20.h"
-evHandlerDS18b20 evDS18b20(1000L * 5);
-bool dsInfo = true;
+evHandlerDS18b20 monDS18b20( 1000L * 60);
+bool dsInfo = false;
 
 
 /*
@@ -237,8 +236,8 @@ void loop() {
           case evxDthRead:
 
 
-            V_println(evDHT20.getTemperature());
-            V_println(evDHT20.getHumidity());
+            V_println(monDHT20.getTemperature());
+            V_println(monDHT20.getHumidity());
             break;
           /*
                    case evxDthHumidity:
@@ -249,7 +248,7 @@ void loop() {
                      break;
           */
           case evxDthError:
-            V_println(Events.intExt2);
+            V_println(monDHT20.error);
             break;
         }
       }
@@ -266,20 +265,12 @@ void loop() {
             break;
           case evxDsRead:
             if (dsInfo) T_println("evxDsRead");
-
-            //V_println(evDHT20.getTemperature());
-            //V_println(evDHT20.getHumidity());
+            TV_print("sonde", monDS18b20.current);
+            V_println(monDS18b20.getTemperature());
             break;
-          /*
-                   case evxDthHumidity:
-                     TV_println("Humidity", (float)Events.intExt2 / 100);
-                     break;
-                   case evxDthTemperature:
-                     TV_println("Temperature", (float)Events.intExt2 / 100);
-                     break;
-          */
+          
           case evxDsError:
-            V_println(Events.intExt2);
+            TV_println("evxDsError", monDS18b20.error);
             break;
         }
       }
@@ -525,6 +516,10 @@ void loop() {
         dhtInfo = !dhtInfo;
         V_println(dhtInfo);
       }
+      if (Keyboard.inputString.equals(F("DSINFO"))) {
+        dsInfo = !dsInfo;
+        V_println(dsInfo);
+      }
       if (Keyboard.inputString.equals(F("INFO"))) {
         String aStr = F(" CPU=");
         aStr += String(Events._percentCPU);
@@ -543,7 +538,7 @@ void loop() {
         WiFi.mode(WIFI_OFF);
         //WiFi.forceSleepBegin();
         T_print("WIFI_OFF")
-          V_println(WiFi.getMode());
+        V_println(WiFi.getMode());
       }
 
 
@@ -551,7 +546,7 @@ void loop() {
         WiFi.mode(WIFI_STA);
         //WiFi.begin();
         T_print("WIFI_STA")
-          V_println(WiFi.getMode());
+        V_println(WiFi.getMode());
       }
 
 

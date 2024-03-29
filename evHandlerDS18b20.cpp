@@ -20,21 +20,28 @@
 //{};
 
 void evHandlerDS18b20::begin() {
-  Events.delayedPushMilli(delai, evDs18b20, evxDsStart); // relecture dans le delai imposé
-  reset_search();
-  //    delay(250);
-  current = 0;
-  Events.forceDelayedPushMilli(250, evDs18b20, evxDsSearch, true); // next read in 250ms
+  //Events.delayedPushMilli(delai, evDs18b20, evxDsStart); // relecture dans le delai imposé
+  //
+  //Events.forceDelayedPushMilli(250, evDs18b20, evxDsSearch, true); // next read in 250ms
+  //getNumberOfDevices();
+  reset();
+  //delay(300);
+  Events.repeatedPushMilli(delai, evDs18b20); // relecture dans le delai imposé  evxDsStart est imposé
+  //reset_search();
 };
 
 // gestion des evenements
 void evHandlerDS18b20::handle() {
   if (Events.code != evDs18b20) return;
   if (Events.ext == evxDsStart) {
-    begin();
+    reset_search();
+    Events.forceDelayedPushMilli(500, evDs18b20, evxDsSearch);
+  //    delay(250);
+  current = 0;
     return;
   }
   if (Events.ext == evxDsSearch) {
+    //DTV_println("evxDsSearch",current);
     if ( !search(addr)) {
       //Serial.println("No more addresses.");
       if (current == 0) {
@@ -42,8 +49,8 @@ void evHandlerDS18b20::handle() {
         Events.push( evDs18b20, evxDsError);
       }
       //derniere sonde lue
-      //#if LED0_PIN == ONEWIRE_PIN
-      //pinMode(LED0_PIN,OUTPUT);
+      //#if D4 == ONEWIRE_PIN
+      //pinMode(ONEWIRE_PIN,OUTPUT);  // give back output mode
       //#endif
       return;
     }
@@ -62,19 +69,19 @@ void evHandlerDS18b20::handle() {
     // the first ROM byte indicates which chip
     switch (addr[0]) {
       case 0x10:
-        //  Serial.println("  Chip = DS18S20");  // or old DS1820
+        // Serial.println("  Chip = DS18S20");  // or old DS1820
         type_s = 1;
         break;
       case 0x28:
-        //  Serial.println("  Chip = DS18B20");
+        //Serial.println("  Chip = DS18B20");
         type_s = 0;
         break;
       case 0x22:
-        //  Serial.println("  Chip = DS1822");
+        //Serial.println("  Chip = DS1822");
         type_s = 0;
         break;
       default:
-        //        Serial.println("Device is not a DS18x20 family device.");
+        //Serial.println("Device is not a DS18x20 family device.");
         error = 3; // bad device
         Events.push( evDs18b20, evxDsError);
         return;
@@ -127,9 +134,9 @@ void evHandlerDS18b20::handle() {
       //// default is 12 bit resolution, 750 ms conversion time
     }
 
-    if (current < MAXDS18b20) Events.push(evDs18b20+current, 100L * raw / 16);
+    //if (current < MAXDS18b20) Events.push(evDs18b20+current, 100L * raw / 16);
 
-    Events.forceDelayedPushMilli(0, evDs18b20, evxDsSearch, true); // recherche de la sonde suivante
+    Events.forceDelayedPushMilli(100, evDs18b20, evxDsSearch, true); // recherche de la sonde suivante
     return;
   }
   return;

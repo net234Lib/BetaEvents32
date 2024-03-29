@@ -23,15 +23,12 @@ typedef enum { evxDsStart, evxDsSearch, evxDsRead, evxDsError }  tevxDs;
 
 class evHandlerDS18b20 : private eventHandler_t, OneWire  {
   public:
-    evHandlerDS18b20(const uint8_t aPinNumber, const uint32_t aDelai) :
+    evHandlerDS18b20( const uint32_t aDelai,const uint8_t aPinNumber = D4) :
        OneWire(aPinNumber), delai(aDelai) {};
     virtual void begin()  override;
     virtual void handle()  override;
-    float  celsius() {
+    float  getTemperature() {
       return (float)raw / 16.0;;
-    }
-    float fahrenheit() {
-      return celsius() * 1.8 + 32.0;
     }
     uint8_t getNumberOfDevices();
     uint8_t current;
