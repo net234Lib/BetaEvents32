@@ -24,7 +24,8 @@ void evHandlerDS18b20::begin() {
   //
   //Events.forceDelayedPushMilli(250, evDs18b20, evxDsSearch, true); // next read in 250ms
   //getNumberOfDevices();
-  reset();
+  
+  //reset();
   //delay(300);
   Events.repeatedPushMilli(delai, evDs18b20); // relecture dans le delai imposé  evxDsStart est imposé
   //reset_search();
@@ -34,6 +35,7 @@ void evHandlerDS18b20::begin() {
 void evHandlerDS18b20::handle() {
   if (Events.code != evDs18b20) return;
   if (Events.ext == evxDsStart) {
+    reset();
     reset_search();
     Events.forceDelayedPushMilli(500, evDs18b20, evxDsSearch);
   //    delay(250);
@@ -49,9 +51,7 @@ void evHandlerDS18b20::handle() {
         Events.push( evDs18b20, evxDsError);
       }
       //derniere sonde lue
-      //#if D4 == ONEWIRE_PIN
-      //pinMode(ONEWIRE_PIN,OUTPUT);  // give back output mode
-      //#endif
+      if (pinNumber == D4) pinMode(pinNumber,OUTPUT);  // give back output mode
       return;
     }
     //   Serial.print("ROM =");
@@ -91,7 +91,7 @@ void evHandlerDS18b20::handle() {
     select(addr);
     write(0x44, 1);        // start conversion, with parasite power on at the end
     //delay(1000);
-    Events.forceDelayedPushMilli(900, evDs18b20, evxDsRead, true); // get converted value in 1000ms ( > 750ms)
+    Events.forceDelayedPushMilli(800, evDs18b20, evxDsRead, true); // get converted value in 1000ms ( > 750ms)
     return;
   }
   if (Events.ext == evxDsRead) {

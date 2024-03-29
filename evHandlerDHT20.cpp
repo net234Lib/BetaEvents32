@@ -56,7 +56,7 @@ void evHandlerDht20::handle() {
   if (Events.code != evDth20) return;
   if (Events.ext == evxDthStart) {
     if (!DHT.requestData()) {
-      Events.forceDelayedPushMilli(2000, evDth20, evxDthRun); // lecture dans 2 secondes
+      Events.forceDelayedPushMilli(1100, evDth20, evxDthRun); // lecture dans 1 secondes
       return;
     }
     error = DHT.readStatus();
