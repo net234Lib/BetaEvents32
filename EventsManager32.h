@@ -58,7 +58,7 @@
 // betaEvent handle a minimal time system to get for seconds() minutes() or hours()
 
 #include <TimeLib.h>  // uncomment this if you prefer to use arduino TimeLib.h  (it will use little more ram and flash)
-
+#include "evHelpers.h"
 
 
 void displaySizeofItems();
@@ -106,14 +106,16 @@ struct stdEvent_t {
   //  stdEvent_t(const uint8_t code = evNill, const char aChar) : code(code), aChar(aChar) {};
 
   stdEvent_t(const stdEvent_t& stdevent)
-    : code(stdevent.code), intExt2(stdevent.intExt2), data(stdevent.data){};
-
+  : code(stdevent.code), ext3(stdevent.ext3), intExt2(stdevent.intExt2), data(stdevent.data){};
+  //: stdEvent_t(stdEvent);
   uint8_t code;     // code of the event
+  uint8_t ext3;  // only in Manager32
   int16_t intExt2;  // only in Manager32
   union {
     uint8_t ext;  // extCode of the event
     char charExt;
     int intExt;
+    float floatExt;
     String* StringPtr;
     size_t data;
   };
@@ -182,8 +184,8 @@ public:
   friend byte minute();
   friend byte hour();
 #endif
-  size_t freeRam();
-  void reset();
+//  size_t freeRam();
+//  void reset();
 #ifndef _Time_h
   uint32_t timestamp = 0;  //timestamp en seconde  (more than 100 years)
 #endif
@@ -219,4 +221,4 @@ private:
 
 extern EventManager Events;
 
-#include "evHelpers.h"
+

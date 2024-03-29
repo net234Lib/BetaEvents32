@@ -251,7 +251,7 @@ void evHandlerDebug::handle() {
           Serial.print(F(",Nill="));
           Serial.print(evManager._evNillParsec);
           Serial.print(F(",Ram="));
-          Serial.print(evManager.freeRam());
+          Serial.print(helperFreeRam());
 #ifdef ESP8266
           Serial.print(F(",Frag="));
           Serial.print(ESP.getHeapFragmentation());

@@ -362,7 +362,7 @@ void loop() {
 
 
     case doReset:
-      Events.reset();
+      helperReset();
       break;
 
 
@@ -396,33 +396,33 @@ void loop() {
       if (Keyboard.inputString.equals(F("O"))) {
         Serial.println(F("Push 3 delay events"));
         Serial.print(F("Ram="));
-        Serial.println(Events.freeRam());
+        Serial.println(helperFreeRam());
         Events.delayedPushMilli(500, ev1S);
         Events.delayedPushMilli(11 * 1000, ev2S);
         Events.delayedPushMilli(11L * 60 * 1000, ev3S);
         Serial.print(F("Ram="));
-        Serial.println(Events.freeRam());
+        Serial.println(helperFreeRam());
       }
       if (Keyboard.inputString.equals(F("P1"))) {
         Serial.println(F("Push 3 delay events"));
         Serial.print(F("Ram="));
-        Serial.println(Events.freeRam());
+        Serial.println(helperFreeRam());
         Events.push(ev1S, 1011, 1002);
         Events.forceDelayedPushMilli(1000, ev1S, 1111, 1102);
         Events.delayedPushMilli(2000, ev2S, 2222, 2202);
         Events.delayedPushMilli(3000, ev3S, 3333, 3302);
         Serial.print(F("Ram="));
-        Serial.println(Events.freeRam());
+        Serial.println(helperFreeRam());
       }
       if (Keyboard.inputString.equals(F("P2"))) {
         Serial.println(F("Push 3 events"));
         Serial.print(F("Ram="));
-        Serial.println(Events.freeRam());
+        Serial.println(helperFreeRam());
         Events.delayedPushMilli(0, ev1S, 1, 11);
         Events.delayedPushMilli(0, ev2S, 2, 12);
         Events.delayedPushMilli(0, ev3S, 3, 13);
         Serial.print(F("Ram="));
-        Serial.println(Events.freeRam());
+        Serial.println(helperFreeRam());
       }
       /*
         if (Keyboard.inputString.equals(F("BCAST"))) {
@@ -468,9 +468,9 @@ void loop() {
       }
       if (Keyboard.inputString.equals(F("FREE"))) {
         Serial.print(F("Ram="));
-        Serial.println(Events.freeRam());
+        Serial.println(helperFreeRam());
         String aStr = F("FREE=");
-        aStr += String(Events.freeRam());
+        aStr += String(helperFreeRam());
         //myUdp.broadcastInfo(aStr);
       }
 

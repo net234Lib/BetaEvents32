@@ -57,8 +57,8 @@ class evHandlerDht20 : private eventHandler_t  {
     // deltaTemp(aDeltaTemp), deltaHum(aDeltaHum), delai(aDelai) {};
     virtual void begin()  override;
     virtual void handle()  override;
-    float  getTemperature();  //read temp now      use temperature below
-    float  getHumidity();     //read humidity now  use humidity below
+    float  getTemperature();  
+    float  getHumidity();     
     uint8_t error;
     //float temperature;
     //float humidity;

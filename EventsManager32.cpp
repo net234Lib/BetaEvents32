@@ -1,4 +1,4 @@
-#include "evHelpers.h"
+
 /*************************************************
      Sketch betaEvents.ino   validation of lib betaEvents to deal nicely with events programing with Arduino
     Copyright 2020 Pierre HENRY net23@frdev.com All - right reserved.
@@ -484,7 +484,7 @@ bool EventManager::removeDelayEvent(const byte codeevent) {
   return (removeDelayEventFromList(codeevent, &(eventMillisList)) || removeDelayEventFromList(codeevent, &(eventTenthList)) || removeLongDelayEventFromList(codeevent, &(eventSecondsList)));
 }
 EventManager Events = EventManager();
-
+/*
 //====== Sram dispo =========
 size_t EventManager::freeRam() {
 #ifndef __AVR__
@@ -497,7 +497,9 @@ size_t EventManager::freeRam() {
   return (int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval);
 #endif
 }
+*/
 
+/*
 void EventManager::reset() {
   delay(100);
 #ifdef __AVR__
@@ -509,6 +511,7 @@ void EventManager::reset() {
     delay(1);
   }
 }
+*/
 
 void displaySizeofItems() {
   DV_println(sizeof(delayEventItem_t));
