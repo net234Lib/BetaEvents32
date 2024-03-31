@@ -58,6 +58,7 @@ typedef enum {
   // evenement etendus pour les Input Output
   evxOff,      // IO Off (les ou Relais)
   evxOn,       // IO on
+  evxRepeat,   // auto repeat (keypad)
   evxBlink,    // clignotement actif (LED)
   evxLongOff,  // poussoir relaché longtemp
   evxLongOn,   // pousoir enfoncé longtemps
@@ -65,25 +66,23 @@ typedef enum {
 
 class evHandlerOutput : public eventHandler_t {
 
-  public:
-    evHandlerOutput(const uint8_t aEventCode, const uint8_t aPinNumber, const bool stateON = HIGH);
-    virtual void begin() override;
-    virtual void handle() override;
-    bool isOn();
-    void setOn(const bool status = true);
-    void pulse(const uint32_t millisecondes);  // pulse d'allumage simple
-
- 
-
-  private:
-    uint8_t pinNumber;
-    bool stateON; // = HIGH;
-    bool state; // = false;
-    
- protected:
-    uint8_t evCode;
+public:
+  evHandlerOutput(const uint8_t aEventCode, const uint8_t aPinNumber, const bool stateON = HIGH);
+  virtual void begin() override;
+  virtual void handle() override;
+  bool isOn();
+  void setOn(const bool status = true);
+  void pulse(const uint32_t millisecondes);  // pulse d'allumage simple
 
 
+
+private:
+  uint8_t pinNumber;
+  bool stateON;  // = HIGH;
+  bool state;    // = false;
+
+protected:
+  uint8_t evCode;
 };
 
 /**********************************************************
@@ -98,17 +97,17 @@ class evHandlerOutput : public eventHandler_t {
 
 
 class evHandlerLed : public evHandlerOutput {
-  public:
-    evHandlerLed(const uint8_t aEventCode, const uint8_t aPinNumber, const bool stateON = HIGH, const uint8_t frequence = 0);
-    //virtual void begin()  override;
-    virtual void handle() override;
-    void setOn(const bool status = true);
-    void setFrequence(const uint8_t frequence, const uint8_t percent = 10);      // frequence de la led
-    void setMillisec(const uint16_t millisecondes, const uint8_t percent = 10);  // frequence de la led
+public:
+  evHandlerLed(const uint8_t aEventCode, const uint8_t aPinNumber, const bool stateON = HIGH, const uint8_t frequence = 0);
+  //virtual void begin()  override;
+  virtual void handle() override;
+  void setOn(const bool status = true);
+  void setFrequence(const uint8_t frequence, const uint8_t percent = 10);      // frequence de la led
+  void setMillisec(const uint16_t millisecondes, const uint8_t percent = 10);  // frequence de la led
 
-  private:
-    uint16_t millisecondes;
-    uint8_t percent;
+private:
+  uint16_t millisecondes;
+  uint8_t percent;
 };
 
 
@@ -122,24 +121,73 @@ class evHandlerLed : public evHandlerOutput {
 
 
 class evHandlerButton : public eventHandler_t {
-  public:
-    evHandlerButton(const uint8_t aEventCode, const uint8_t aPinNumber, const uint16_t aLongDelay = 1500);
-    virtual void begin() override;
-    virtual void handle() override;
-    bool isOn() {
-      return state;
-    };
+public:
+  evHandlerButton(const uint8_t aEventCode, const uint8_t aPinNumber, const uint16_t aLongDelay = 1500);
+  virtual void begin() override;
+  virtual void handle() override;
+  bool isOn() {
+    return state;
+  };
 
-  protected:
-    uint8_t evCode;
+protected:
+  uint8_t evCode;
 
-  private:
-    uint8_t pinNumber;
-    uint16_t longDelay;
-    bool state = HIGH;
+private:
+  uint8_t pinNumber;
+  uint16_t longDelay;
+  bool state = HIGH;
 };
 
 #ifndef __AVR_ATtiny85__
+
+/***************************************************************
+
+
+Gestion de pousoirs avec un port analogique (A0)
+genere un evxOn  evxOff   
+si repeatDelay est fournis un evxRepeat est generé 
+
+   +------ A0
+    |
+    +------R10K-----V3.3
+    |
+    +-[SEL]------------GND
+    |
+    +-[NEXT]----R2K----GND
+    |
+    +-[BEFORE]--R4,7K--GND
+    |
+    +-[INC]---- R5,6K--GND
+    |
+    +-[DEC]-----R7,5K--GND
+
+
+****************************************************************/
+
+class evHandlerKeypad : public eventHandler_t {
+public:
+  evHandlerKeypad(const uint8_t aEventCode, const uint8_t aPinNumber = A0, const uint16_t aRepeatDelay = 1000)
+    : evCode(aEventCode), pinNumber(aPinNumber), repeatDelay(aRepeatDelay){};
+  //virtual void begin() override;
+  virtual void handle() override;
+  uint16_t getKey() {
+    return key;
+  };
+
+protected:
+  uint8_t evCode;
+
+private:
+  uint8_t pinNumber;  //On esp only A0   (for ESP32 version)
+  uint16_t repeatDelay;
+  uint16_t currentDelay;
+  uint8_t key = 0;
+  uint16_t value = 0;
+  bool pendingValue = false;
+};
+
+
+
 /**********************************************************
 
    gestion de Serial pour generer les   evInChar et  evInString
@@ -147,21 +195,20 @@ class evHandlerButton : public eventHandler_t {
  ***********************************************************/
 
 class evHandlerSerial : public eventHandler_t {
-  public:
-    evHandlerSerial(const uint32_t aSerialSpeed = 115200, const uint8_t inputStringSize = 100);
-    virtual void begin() override;
-    //virtual void handle()  override;
-    virtual byte get() override;
-    void  setInputString(const String aStr);
-    String inputString = "";
-    char inputChar = '\0';
-  private:
-    
-    uint32_t serialSpeed;
-    uint8_t inputStringSizeMax;
-    bool stringComplete = false;
-    bool stringErase = false;
-    
+public:
+  evHandlerSerial(const uint32_t aSerialSpeed = 115200, const uint8_t inputStringSize = 100);
+  virtual void begin() override;
+  //virtual void handle()  override;
+  virtual byte get() override;
+  void setInputString(const String aStr);
+  String inputString = "";
+  char inputChar = '\0';
+private:
+
+  uint32_t serialSpeed;
+  uint8_t inputStringSizeMax;
+  bool stringComplete = false;
+  bool stringErase = false;
 };
 
 
@@ -177,13 +224,13 @@ class evHandlerSerial : public eventHandler_t {
 
 
 class evHandlerDebug : public eventHandler_t {
-  public:
-    //evHandlerDebug();
-    virtual void handle() override;
-    uint8_t trackTime = 0;
-  private:
-    uint16_t ev100HzMissed = 0;
-    uint16_t ev10HzMissed = 0;
+public:
+  //evHandlerDebug();
+  virtual void handle() override;
+  uint8_t trackTime = 0;
+private:
+  uint16_t ev100HzMissed = 0;
+  uint16_t ev10HzMissed = 0;
 };
 
 #endif

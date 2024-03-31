@@ -94,6 +94,7 @@ enum tUserEventCode {
   // evenement recu
   evBP0 = 100,
   evBP1,
+  evKeypad,
   evLed0,
   evLed1,
   ev1S = 151,
@@ -107,10 +108,11 @@ enum tUserEventCode {
 };
 
 
-#define BP0_PIN 0  //D3
+#define BP0_PIN D3  // 0  //D3
 #define BP1_PIN 14
 #define LED1_PIN 16
 #define ONEWIRE_PIN D4  //SHARE LED BUILTIN !!!
+#define BEEP_PIN D3     // SHARE BP0
 // instances poussoir
 evHandlerButton BP0(evBP0, BP0_PIN);
 //evHandlerButton BP1(evBP1, BP1_PIN);
@@ -120,6 +122,8 @@ evHandlerButton BP0(evBP0, BP0_PIN);
 evHandlerLed Led0(evLed0, LED_BUILTIN, HIGH);
 evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
 
+// instance keypad
+evHandlerKeypad monKeypad(evKeypad, A0);
 
 // instance DHT20
 #include "evHandlerDHT20.h"
@@ -207,59 +211,35 @@ void loop() {
 
     case ev10Hz:
       {
-//poussoir par analogRead
-/*
-    +------ A0
-    |
-    +------R10K-----V3.3
-    |
-    +-[SEL]------------GND
-    |
-    +-[NEXT]----R2K----GND
-    |
-    +-[BEFORE]--R4,7K--GND
-    |
-    +-[INC]---- R5,6K--GND
-    |
-    +-[DEC]-----R7,5K--GND
+      }
+      break;
 
-
-
-*/
-
-        int aValue = analogRead(A0);
-        static int lastValue = -1;
-        if (abs(lastValue-aValue)>10) {
-          delay(10);
-          if (abs(aValue-analogRead(A0))>10) break;
-          lastValue = aValue;
-          if (aValue > 1000) {
-            T_println("UP (1000)")
-          } else if (aValue > 450) {
-            T_println("NEXT (450)")
-          } else if (aValue > 380) {
-            T_println("BEFORE (380)")
-          } else if (aValue > 340) {
-            T_println("INC (340)")
-          }  else if (aValue > 260) {
-            T_println("BEFORE + NEXT (260)")
-          } else if (aValue > 180) {
-            T_println("DEC (180)")
-          } else if (aValue > 140) {
-            T_println("INC + DEC (140)")
-          }  else {
-            T_println("SEL")
-          }
-          V_println(aValue);
-        }
-        /*
-
-        if (sendInfo) {
-              String aStr = F("SECONDE=");
-              aStr += second();
-              myUdp.broadcastInfo(aStr);
+    case evKeypad:
+      {
+        int aKey = monKeypad.getKey();
+        String aStr = "";
+        if (aKey & 0b00000001) aStr += "Millieu ";
+        if (aKey & 0b00000010) aStr += "Droite ";
+        if (aKey & 0b00000100) aStr += "Gauche ";
+        if (aKey & 0b00001000) aStr += "Haut ";
+        if (aKey & 0b00010000) aStr += "Bas ";
+        switch (Events.ext) {
+          case evxOn:
+            TV_println("Keypad on: ", aStr);
+            if (aKey == 1) {
+              beep(443, 100);
+            } else {
+              beep(1000, 50);
             }
-      */
+            break;
+          case evxOff:
+            TV_println("Keypad relaché: ", aStr);
+            break;
+          case evxRepeat:
+            TV_println("Keypad repeat: ", aStr);
+            beep(1000, 10);
+            break;
+        }
       }
       break;
 
@@ -599,4 +579,35 @@ void loop() {
 
       break;
   }
+}
+
+
+// fatal error
+// flash led0 same number as error 10 time then reset
+//
+void fatalError(const uint8_t error) {
+  Serial.print(F("Fatal error "));
+  Serial.println(error);
+
+
+  // display error on LED_BUILTIN
+  for (uint8_t N = 1; N <= 5; N++) {
+    for (uint8_t N1 = 1; N1 <= error; N1++) {
+      delay(150);
+      Led0.setOn(true);
+      beep(988, 100);
+      delay(150);
+      Led0.setOn(false);
+    }
+    delay(500);
+  }
+  delay(2000);
+  helperReset();
+}
+
+
+void beep(const uint16_t frequence, const uint16_t duree) {
+  tone(BEEP_PIN, frequence, duree);
+  delay(duree);
+  pinMode(BEEP_PIN, INPUT_PULLUP);
 }

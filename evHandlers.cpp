@@ -1,3 +1,4 @@
+#include "evHelpers.h"
 /*************************************************
  *************************************************
     handler evHandlers.cpp   validation of lib betaEvents to deal nicely with events programing with Arduino
@@ -49,7 +50,7 @@
  ***********************************************************/
 
 evHandlerOutput::evHandlerOutput(const uint8_t aEventCode, const uint8_t aPinNumber, const bool aStateON)
-  : pinNumber(aPinNumber), stateON(aStateON), evCode(aEventCode) {};
+  : pinNumber(aPinNumber), stateON(aStateON), evCode(aEventCode){};
 
 void evHandlerOutput::begin() {
   pinMode(pinNumber, OUTPUT);
@@ -147,7 +148,7 @@ void evHandlerLed::setFrequence(const uint8_t frequence, const uint8_t percent) 
 
 
 evHandlerButton::evHandlerButton(const uint8_t aEventCode, const uint8_t aPinNumber, const uint16_t aLongDelay)
-  : evCode(aEventCode), pinNumber(aPinNumber),  longDelay(aLongDelay) {};
+  : evCode(aEventCode), pinNumber(aPinNumber), longDelay(aLongDelay){};
 
 void evHandlerButton::begin() {
   pinMode(pinNumber, INPUT_PULLUP);
@@ -169,6 +170,91 @@ void evHandlerButton::handle() {
 }
 
 #ifndef __AVR_ATtiny85__
+
+/***************************************************************
+
+
+Gestion de pousoirs avec un port analogique (A0)
+genere un evxOn  evxOff   
+si repeatDelay est fournis un evxRepeat est generé 
+
+   +------ A0
+    |
+    +------R10K-----V3.3
+    |
+    +-[SEL]------------GND
+    |
+    +-[NEXT]----R2K----GND
+    |
+    +-[BEFORE]--R4,7K--GND
+    |
+    +-[INC]---- R5,6K--GND
+    |
+    +-[DEC]-----R7,5K--GND
+
+
+****************************************************************/
+
+//evHandlerKeypad::evHandlerKeypad(const uint8_t aEventCode, const uint8_t aPinNumber, const uint16_t aRepeatDelay)
+//  : evCode(aEventCode), pinNumber(aPinNumber), repeatDelay(aRepeatDelay){};
+
+/*
+evHandlerKeypad::begin() {
+   //TODO: aTable to setup spec ific value for the pad
+}
+*/
+void evHandlerKeypad::handle() {
+  if (Events.code == evCode and Events.ext == evxRepeat) {
+    if (currentDelay >= repeatDelay / 4) {
+      currentDelay -= repeatDelay / 10;
+    }
+    Events.delayedPushMilli(currentDelay, evCode, evxRepeat, key);  // arme un event BP long On
+    return;
+  }
+  if (evManager.code != ev10Hz) return;
+
+  int aValue = analogRead(pinNumber);
+  if (abs(value - aValue) > 10) {
+
+    pendingValue = true;
+    value = aValue;
+    //DTV_println("Pending keypad", value);
+    return;
+  }
+  if (!pendingValue) return;
+
+  pendingValue = false;
+  //DV_print(value);
+  //key = 0;
+  if (value > 1000) {                                 //key
+    Events.delayedPushMilli(0, evCode, evxOff, key);  //clear repeat
+    return;
+  } else if (value > 450) {
+    key = 0b00000010;  //droite
+  } else if (value > 380) {
+    key = 0b00000100;  //gauche
+  } else if (value > 340) {
+    key = 0b00001000;  //haut
+  } else if (value > 260) {
+    key = 0b00000110;  //gauche + droite
+  } else if (value > 180) {
+    key = 0b00010000;  //bas
+  } else if (value > 140) {
+    key = 0b00011000;  //haut + bas
+  } else {
+    key = 0b00000001;  //millieux
+  }
+  //DV_print(key);
+  Events.push(evCode, evxOn, key);
+  if (key != 1) {
+    currentDelay = repeatDelay;
+    Events.delayedPushMilli(currentDelay, evCode, evxRepeat, key);  // arme un event BP long On
+  }
+  return;
+}
+
+
+
 /**********************************************************
 
    gestion de Serial pour generer les   evInChar et  evInString
@@ -217,7 +303,7 @@ byte evHandlerSerial::get() {
  * forcage d'une inputstring
  */
 
-void  evHandlerSerial::setInputString(const String aStr) {
+void evHandlerSerial::setInputString(const String aStr) {
   inputString = aStr;
   stringComplete = (inputString.length() > 0);
 }
