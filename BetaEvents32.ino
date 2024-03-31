@@ -128,7 +128,7 @@ bool dhtInfo = false;
 
 // instance DS18b20
 #include "evHandlerDS18b20.h"
-evHandlerDS18b20 monDS18b20( 1000L * 60);
+evHandlerDS18b20 monDS18b20(1000L * 60);
 bool dsInfo = false;
 
 
@@ -205,8 +205,54 @@ void loop() {
       }
       break;
 
-    case ev1Hz:
-      /*
+    case ev10Hz:
+      {
+//poussoir par analogRead
+/*
+    +------ A0
+    |
+    +------R10K-----V3.3
+    |
+    +-[SEL]------------GND
+    |
+    +-[NEXT]----R2K----GND
+    |
+    +-[BEFORE]--R4,7K--GND
+    |
+    +-[INC]---- R5,6K--GND
+    |
+    +-[DEC]-----R7,5K--GND
+
+
+
+*/
+
+        int aValue = analogRead(A0);
+        static int lastValue = -1;
+        if (abs(lastValue-aValue)>10) {
+          delay(10);
+          if (abs(aValue-analogRead(A0))>10) break;
+          lastValue = aValue;
+          if (aValue > 1000) {
+            T_println("UP (1000)")
+          } else if (aValue > 450) {
+            T_println("NEXT (450)")
+          } else if (aValue > 380) {
+            T_println("BEFORE (380)")
+          } else if (aValue > 340) {
+            T_println("INC (340)")
+          }  else if (aValue > 260) {
+            T_println("BEFORE + NEXT (260)")
+          } else if (aValue > 180) {
+            T_println("DEC (180)")
+          } else if (aValue > 140) {
+            T_println("INC + DEC (140)")
+          }  else {
+            T_println("SEL")
+          }
+          V_println(aValue);
+        }
+        /*
 
         if (sendInfo) {
               String aStr = F("SECONDE=");
@@ -214,6 +260,7 @@ void loop() {
               myUdp.broadcastInfo(aStr);
             }
       */
+      }
       break;
 
     case ev24H:
@@ -268,7 +315,7 @@ void loop() {
             TV_print("sonde", monDS18b20.current);
             V_println(monDS18b20.getTemperature());
             break;
-          
+
           case evxDsError:
             TV_println("evxDsError", monDS18b20.error);
             break;
@@ -538,7 +585,7 @@ void loop() {
         WiFi.mode(WIFI_OFF);
         //WiFi.forceSleepBegin();
         T_print("WIFI_OFF")
-        V_println(WiFi.getMode());
+          V_println(WiFi.getMode());
       }
 
 
@@ -546,7 +593,7 @@ void loop() {
         WiFi.mode(WIFI_STA);
         //WiFi.begin();
         T_print("WIFI_STA")
-        V_println(WiFi.getMode());
+          V_println(WiFi.getMode());
       }
 
 
