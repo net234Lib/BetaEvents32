@@ -8,9 +8,10 @@
 //
 // source : https://github.com/ThingPulse/esp8266-oled-ssd1306
 //
+// version provisoire specifique pour les betaRad
 
 #include "evHandlerSSD1306.h"
-
+#include "Dialog_plain_40.h"
 
 // For a connection via I2C using the Arduino Wire include:
 //#include <Wire.h>         // Only needed for Arduino 1.6.5 and earlier
@@ -54,11 +55,11 @@ void evHandlerSSD1306::setDsp2(const String& aText) {
 
 // clear graphique
 void evHandlerSSD1306::setGraphique()  {
-  logo1 = imageMap_t();
+  logo1 = nullptr;
   refresh();
 }
 
-void evHandlerSSD1306::setGraphique(const imageMap_t aLogo)  {
+void evHandlerSSD1306::setGraphique(const uint8* aLogo)  {
   logo1 = aLogo;
   refresh();
 }
@@ -71,12 +72,17 @@ void evHandlerSSD1306::refresh() {
     display.drawString(64, 0, dsp1);
   }
   if (dsp2.length()) {
-    display.setFont(ArialMT_Plain_24);
+   // display.setFont(ArialMT_Plain_24);
+   display.setFont((uint8_t*)Dialog_plain_40);
+    
     display.setTextAlignment(TEXT_ALIGN_CENTER);
     display.drawString(64, 18, dsp2);
   }
-  if (logo1.width) {
-    display.drawXbm(64 - (logo1.width / 2), 0, logo1.width, logo1.height, logo1.data);
+  if (logo1) {
+    const uint8_t* aPtr = logo1;
+    uint8_t aWidth =  pgm_read_byte(aPtr++);
+    uint8_t aHeight = pgm_read_byte(aPtr++);
+    display.drawXbm((display.width() - aWidth) / 2, 0, aWidth, aHeight, aPtr);
   }
 
   // write the buffer to the display

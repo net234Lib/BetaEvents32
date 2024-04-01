@@ -15,7 +15,7 @@
 #pragma once
 #include "EventsManager32.h"
 
-
+/*
 //Graphique type MONO
 struct imageMap_t {
   imageMap_t() : width(0),height(0) {};
@@ -24,6 +24,7 @@ struct imageMap_t {
   uint16_t height;
   const uint8_t* data;
 };
+*/
 
 class evHandlerSSD1306 : private eventHandler_t {
 public:
@@ -31,14 +32,16 @@ public:
   virtual void begin() override;
   virtual void handle() override;
 
+
+
   void setDsp1(const String & aText);
   void setDsp2(const String & aText);
-  void setGraphique(const imageMap_t aLogo);
+  void setGraphique(const uint8_t* aLogo);
   void setGraphique();
   void refresh();
 
 private:
   String dsp1;
   String dsp2;
-  imageMap_t logo1;
+  const uint8* logo1;
  };

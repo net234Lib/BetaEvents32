@@ -132,11 +132,11 @@ evHandlerKeypad monKeypad(evKeypad, A0);
 #include "evHandlerSSD1306.h"
 evHandlerSSD1306 myOled;
 
-#include "FontMonoSpaced30.h"
+
 
 
 #include "BetaLogo.h"
-imageMap_t monLogo(BETAlogo_width, BETAlogo_height, BETAlogo_data);
+
 
 // instance DHT20
 #include "evHandlerDHT20.h"
@@ -220,7 +220,7 @@ void loop() {
     case evInit:
 
       Serial.println("ev init");
-      myOled.setGraphique(monLogo);
+      myOled.setGraphique(BETAlogo);
       Events.delayedPushMilli(4000, evPostInit);
       //      myUdp.broadcastInfo("Boot");
 
@@ -255,7 +255,7 @@ void loop() {
             TV_println("Keypad on: ", aStr);
             if (aKey == 1) {
               beep(443, 100);
-              myOled.setGraphique(monLogo);
+              myOled.setGraphique(BETAlogo);
               Events.delayedPushMilli(4000, evPostInit);
             } else {
               beep(1000, 50);
