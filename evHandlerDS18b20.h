@@ -1,4 +1,4 @@
-//#include  <EventsManager32.h>
+
 
 
 // Version evenementielle de l'exemple de la lib standard OneDrive
@@ -8,7 +8,8 @@
 //
 // The DallasTemperature library can do all this work for you!
 // https://github.com/milesburton/Arduino-Temperature-Control-Library
-
+#pragma once
+#include <Arduino.h>
 
 
 

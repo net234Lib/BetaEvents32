@@ -43,6 +43,7 @@ DHT20 DHT;
 
 #include  "evHandlerDHT20.h"
 void evHandlerDht20::begin() {
+  // T_println("evHandlerDht20::begin");
   Wire.begin();
 
   DHT.begin();  //  ESP32 default 21, 22

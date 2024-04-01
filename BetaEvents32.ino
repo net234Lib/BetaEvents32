@@ -118,12 +118,19 @@ evHandlerButton BP0(evBP0, BP0_PIN);
 //evHandlerButton BP1(evBP1, BP1_PIN);
 
 
+
+
+
 // instance LED
 evHandlerLed Led0(evLed0, LED_BUILTIN, HIGH);
 evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
 
 // instance keypad
 evHandlerKeypad monKeypad(evKeypad, A0);
+
+//instance OLED
+#include "evHandlerSSD1306.h"
+evHandlerSSD1306 myOled;
 
 // instance DHT20
 #include "evHandlerDHT20.h"
@@ -134,6 +141,7 @@ bool dhtInfo = false;
 #include "evHandlerDS18b20.h"
 evHandlerDS18b20 monDS18b20(1000L * 60);
 bool dsInfo = false;
+
 
 
 /*
@@ -190,6 +198,7 @@ void setup() {
 }
 
 byte BP0Multi = 0;
+int16_t consigne = 180;
 
 //int ev1000HzCnt = 0;
 //int ev100HzCnt = 0;
@@ -209,8 +218,9 @@ void loop() {
       }
       break;
 
-    case ev10Hz:
+    case ev1Hz:
       {
+        myOled.setDsp1(niceDisplayTime(now(), false));
       }
       break;
 
@@ -231,6 +241,14 @@ void loop() {
             } else {
               beep(1000, 50);
             }
+            if (aKey == 8 and consigne < 240) {
+              consigne +=5;
+              myOled.setDsp2(String(consigne/10.0,1));
+            }
+            if (aKey == 16 and consigne > 80) {
+              consigne -=5;
+              myOled.setDsp2(String(consigne/10.0,1));
+            }
             break;
           case evxOff:
             TV_println("Keypad relaché: ", aStr);
@@ -238,6 +256,14 @@ void loop() {
           case evxRepeat:
             TV_println("Keypad repeat: ", aStr);
             beep(1000, 10);
+            if (aKey == 8 and consigne < 240) {
+              consigne +=5;
+              myOled.setDsp2(String(consigne/10.0,1));
+            }
+            if (aKey == 16 and consigne > 80) {
+              consigne -=5;
+              myOled.setDsp2(String(consigne/10.0,1));
+            }
             break;
         }
       }

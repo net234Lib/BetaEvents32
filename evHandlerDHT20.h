@@ -26,7 +26,7 @@
 
     *************************************************/
 #pragma once
-#include <Arduino.h>
+//#include <Arduino.h>
 #include "EventsManager32.h"
 
 
