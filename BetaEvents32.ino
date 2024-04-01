@@ -132,6 +132,12 @@ evHandlerKeypad monKeypad(evKeypad, A0);
 #include "evHandlerSSD1306.h"
 evHandlerSSD1306 myOled;
 
+#include "FontMonoSpaced30.h"
+
+
+#include "BetaLogo.h"
+imageMap_t monLogo(BETAlogo_width, BETAlogo_height, BETAlogo_data);
+
 // instance DHT20
 #include "evHandlerDHT20.h"
 evHandlerDht20 monDHT20(1000L * 60);
@@ -212,15 +218,26 @@ void loop() {
   switch (Events.code) {
 
     case evInit:
-      {
-        Serial.println("ev init");
-        //      myUdp.broadcastInfo("Boot");
-      }
+
+      Serial.println("ev init");
+      myOled.setGraphique(monLogo);
+      Events.delayedPushMilli(4000, evPostInit);
+      //      myUdp.broadcastInfo("Boot");
+
+      break;
+
+    case evPostInit:
+      myOled.setGraphique();
+      myOled.setDsp2(String(consigne / 10.0, 1));
       break;
 
     case ev1Hz:
       {
-        myOled.setDsp1(niceDisplayTime(now(), false));
+
+        String aStr = niceDisplayTime(now(), false);
+        aStr += "  ";
+        aStr += String(monDHT20.getTemperature(), 1);
+        myOled.setDsp1(aStr);
       }
       break;
 
@@ -238,16 +255,18 @@ void loop() {
             TV_println("Keypad on: ", aStr);
             if (aKey == 1) {
               beep(443, 100);
+              myOled.setGraphique(monLogo);
+              Events.delayedPushMilli(4000, evPostInit);
             } else {
               beep(1000, 50);
             }
             if (aKey == 8 and consigne < 240) {
-              consigne +=5;
-              myOled.setDsp2(String(consigne/10.0,1));
+              consigne += 5;
+              myOled.setDsp2(String(consigne / 10.0, 1));
             }
             if (aKey == 16 and consigne > 80) {
-              consigne -=5;
-              myOled.setDsp2(String(consigne/10.0,1));
+              consigne -= 5;
+              myOled.setDsp2(String(consigne / 10.0, 1));
             }
             break;
           case evxOff:
@@ -257,12 +276,12 @@ void loop() {
             TV_println("Keypad repeat: ", aStr);
             beep(1000, 10);
             if (aKey == 8 and consigne < 240) {
-              consigne +=5;
-              myOled.setDsp2(String(consigne/10.0,1));
+              consigne += 5;
+              myOled.setDsp2(String(consigne / 10.0, 1));
             }
             if (aKey == 16 and consigne > 80) {
-              consigne -=5;
-              myOled.setDsp2(String(consigne/10.0,1));
+              consigne -= 5;
+              myOled.setDsp2(String(consigne / 10.0, 1));
             }
             break;
         }
@@ -591,7 +610,7 @@ void loop() {
         WiFi.mode(WIFI_OFF);
         //WiFi.forceSleepBegin();
         T_print("WIFI_OFF")
-          V_println(WiFi.getMode());
+        V_println(WiFi.getMode());
       }
 
 
@@ -599,7 +618,7 @@ void loop() {
         WiFi.mode(WIFI_STA);
         //WiFi.begin();
         T_print("WIFI_STA")
-          V_println(WiFi.getMode());
+        V_println(WiFi.getMode());
       }
 
 

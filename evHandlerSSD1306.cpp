@@ -26,20 +26,20 @@ void evHandlerSSD1306::begin() {
   //Wire.begin();
   // Initialising the UI will init the display too.
   display.init();
-  display.flipScreenVertically();
+  //display.flipScreenVertically();
 }
 
 void evHandlerSSD1306::handle() {
-/*  if (Events.code != ev10Hz) return;
-  //T_println("evHandlerSSD1306::handle");
-  display.clear();
+  /*  if (Events.code != ev10Hz) return;
+    //T_println("evHandlerSSD1306::handle");
+    display.clear();
 
 
-  display.setFont(ArialMT_Plain_10);
-  display.setTextAlignment(TEXT_ALIGN_RIGHT);
-  display.drawString(128, 54, String(millis()));
-  // write the buffer to the display
-  display.display();
+    display.setFont(ArialMT_Plain_10);
+    display.setTextAlignment(TEXT_ALIGN_RIGHT);
+    display.drawString(128, 54, String(millis()));
+    // write the buffer to the display
+    display.display();
   */
 }
 
@@ -52,15 +52,33 @@ void evHandlerSSD1306::setDsp2(const String& aText) {
   refresh();
 }
 
+// clear graphique
+void evHandlerSSD1306::setGraphique()  {
+  logo1 = imageMap_t();
+  refresh();
+}
+
+void evHandlerSSD1306::setGraphique(const imageMap_t aLogo)  {
+  logo1 = aLogo;
+  refresh();
+}
+
 void evHandlerSSD1306::refresh() {
   display.clear();
-  display.setFont(ArialMT_Plain_16);
-  display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(64, 0, dsp1);
+  if (dsp1.length()) {
+    display.setFont(ArialMT_Plain_16);
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.drawString(64, 0, dsp1);
+  }
+  if (dsp2.length()) {
+    display.setFont(ArialMT_Plain_24);
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.drawString(64, 18, dsp2);
+  }
+  if (logo1.width) {
+    display.drawXbm(64 - (logo1.width / 2), 0, logo1.width, logo1.height, logo1.data);
+  }
 
-  display.setFont(ArialMT_Plain_24);
-  display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(64, 18, dsp2);
   // write the buffer to the display
   display.display();
 }
