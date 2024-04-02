@@ -52,6 +52,20 @@
     V3.0.C    10/02/2024   renomage des delayedEvents
     V3.0.C1   27/02/2024   depart clone Betaevent32DEV
 
+. Variables and constants in RAM (global, static), used 28744 / 80192 bytes (35%)
+║   SEGMENT  BYTES    DESCRIPTION
+╠══ DATA     1516     initialized variables
+╠══ RODATA   1148     constants       
+╚══ BSS      26080    zeroed variables
+. Instruction RAM (IRAM_ATTR, ICACHE_RAM_ATTR), used 61315 / 65536 bytes (93%)
+║   SEGMENT  BYTES    DESCRIPTION
+╠══ ICACHE   32768    reserved space for flash instruction cache
+╚══ IRAM     28547    code in IRAM    
+. Code in flash (default, ICACHE_FLASH_ATTR), used 262320 / 1048576 bytes (25%)
+║   SEGMENT  BYTES    DESCRIPTION
+╚══ IROM     262320   code in flash   
+
+
     *************************************************/
 
 
@@ -73,8 +87,7 @@
 //#define NO_DEBUG   // this keyword remove all Dxx_print  from code
 //#define NO_DEBUGGER // this remove debug instance
 #define DEBUG_ON
-#include "EventsManager32.h"
-//EventManager Events = EventManager();
+#include <EventsManager32.h>
 // instance Serial
 evHandlerSerial Keyboard;
 evHandlerDebug Debug;
@@ -128,6 +141,7 @@ evHandlerLed Led1(evLed1, LED1_PIN, HIGH);
 // instance keypad
 evHandlerKeypad monKeypad(evKeypad, A0);
 
+/*
 //instance OLED
 #include "evHandlerSSD1306.h"
 evHandlerSSD1306 myOled;
@@ -141,14 +155,16 @@ evHandlerSSD1306 myOled;
 // instance DHT20
 #include "evHandlerDHT20.h"
 evHandlerDht20 monDHT20(1000L * 60);
+
 bool dhtInfo = false;
+
 
 // instance DS18b20
 #include "evHandlerDS18b20.h"
 evHandlerDS18b20 monDS18b20(1000L * 60);
 bool dsInfo = false;
 
-
+*/
 
 /*
   // init UDP
@@ -220,15 +236,15 @@ void loop() {
     case evInit:
 
       Serial.println("ev init");
-      myOled.setGraphique(BETAlogo);
+      //myOled.setGraphique(BETAlogo);
       Events.delayedPushMilli(4000, evPostInit);
       //      myUdp.broadcastInfo("Boot");
 
       break;
 
     case evPostInit:
-      myOled.setGraphique();
-      myOled.setDsp2(String(consigne / 10.0, 1));
+      //myOled.setGraphique();
+      //myOled.setDsp2(String(consigne / 10.0, 1));
       break;
 
     case ev1Hz:
@@ -236,8 +252,8 @@ void loop() {
 
         String aStr = niceDisplayTime(now(), false);
         aStr += "  ";
-        aStr += String(monDHT20.getTemperature(), 1);
-        myOled.setDsp1(aStr);
+        //aStr += String(monDHT20.getTemperature(), 1);
+        //myOled.setDsp1(aStr);
       }
       break;
 
@@ -255,18 +271,18 @@ void loop() {
             TV_println("Keypad on: ", aStr);
             if (aKey == 1) {
               beep(443, 100);
-              myOled.setGraphique(BETAlogo);
+              //myOled.setGraphique(BETAlogo);
               Events.delayedPushMilli(4000, evPostInit);
             } else {
               beep(1000, 50);
             }
             if (aKey == 8 and consigne < 240) {
               consigne += 5;
-              myOled.setDsp2(String(consigne / 10.0, 1));
+              //myOled.setDsp2(String(consigne / 10.0, 1));
             }
             if (aKey == 16 and consigne > 80) {
               consigne -= 5;
-              myOled.setDsp2(String(consigne / 10.0, 1));
+              //myOled.setDsp2(String(consigne / 10.0, 1));
             }
             break;
           case evxOff:
@@ -277,11 +293,11 @@ void loop() {
             beep(1000, 10);
             if (aKey == 8 and consigne < 240) {
               consigne += 5;
-              myOled.setDsp2(String(consigne / 10.0, 1));
+              //myOled.setDsp2(String(consigne / 10.0, 1));
             }
             if (aKey == 16 and consigne > 80) {
               consigne -= 5;
-              myOled.setDsp2(String(consigne / 10.0, 1));
+              //myOled.setDsp2(String(consigne / 10.0, 1));
             }
             break;
         }
@@ -295,7 +311,7 @@ void loop() {
         DV_println(aDay);
       }
       break;
-
+/*
     case evDth20:
       {
         switch (Events.ext) {
@@ -311,14 +327,6 @@ void loop() {
             V_println(monDHT20.getTemperature());
             V_println(monDHT20.getHumidity());
             break;
-          /*
-                   case evxDthHumidity:
-                     TV_println("Humidity", (float)Events.intExt2 / 100);
-                     break;
-                   case evxDthTemperature:
-                     TV_println("Temperature", (float)Events.intExt2 / 100);
-                     break;
-          */
           case evxDthError:
             V_println(monDHT20.error);
             break;
@@ -348,7 +356,7 @@ void loop() {
       }
       break;
 
-
+*/
 
 
 
@@ -584,6 +592,7 @@ void loop() {
         Serial.println(F("RESET"));
         Events.push(doReset);
       }
+      /*
       if (Keyboard.inputString.equals(F("DHTINFO"))) {
         dhtInfo = !dhtInfo;
         V_println(dhtInfo);
@@ -592,6 +601,7 @@ void loop() {
         dsInfo = !dsInfo;
         V_println(dsInfo);
       }
+      */
       if (Keyboard.inputString.equals(F("INFO"))) {
         String aStr = F(" CPU=");
         aStr += String(Events._percentCPU);
